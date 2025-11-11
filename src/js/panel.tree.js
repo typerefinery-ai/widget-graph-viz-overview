@@ -64,6 +64,14 @@ window.Widgets.Panel.Tree = window.Widgets.Panel.Tree || {}
         {
           label: "Copy",
           icon: '<i class="fa-regular fa-copy"></i>',
+          isEnabled: function() {
+            const contextItem = panelUtilsNs.contentMenuItem;
+            return !!(
+                contextItem &&
+                typeof contextItem.depth === "number" &&
+                contextItem.depth >= 1
+            );
+          },
           action: () => {
             ns.executeTreeMenuAction(ns.treeMenuActionConfig.copy);
           },
@@ -71,6 +79,10 @@ window.Widgets.Panel.Tree = window.Widgets.Panel.Tree || {}
         {
           label: "Edit DAG",
           icon: '<i class="fa fa-code"></i>',
+          isEnabled: function() {
+            const contextItem = panelUtilsNs.contentMenuItem;
+            return !!(contextItem && typeof contextItem.depth === "number" && contextItem.depth === 1);
+          },
           action: () => {
             ns.executeTreeMenuAction(ns.treeMenuActionConfig.editDag);
           },
