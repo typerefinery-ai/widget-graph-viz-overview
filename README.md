@@ -1,4 +1,4 @@
-# Widget Graph Viz
+# Widget Graph Viz - Composer
 
 ## Status
 
