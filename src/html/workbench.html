@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Widget Communication Workbench</title>
+    <title>Widget Communication Workbench - Force-Directed Graph</title>
     <style>
         * {
             margin: 0;
@@ -206,22 +206,11 @@
             <div class="section">
                 <h3>📡 Communication</h3>
                 <div class="button-group">
-                    <button class="btn" onclick="sendDataRequest()">📥 Request Data</button>
+                    <button class="btn success" onclick="requestOverviewData()">📊 Load Overview Data</button>
+                    <button class="btn" onclick="sendDataRefresh()">🔄 Send Data Refresh</button>
                     <button class="btn" onclick="sendCustomMessage()">💬 Send Custom Message</button>
                     <button class="btn" onclick="simulateError()">❌ Simulate Error</button>
                     <button class="btn" onclick="simulateTimeout()">⏰ Simulate Timeout</button>
-                </div>
-            </div>
-
-            <div class="section">
-                <h3>🎛️ Data Types</h3>
-                <div class="button-group">
-                    <button class="btn" onclick="requestSightingData()">👁️ Sighting Data</button>
-                    <button class="btn" onclick="requestTaskData()">📋 Task Data</button>
-                    <button class="btn" onclick="requestImpactData()">💥 Impact Data</button>
-                    <button class="btn" onclick="requestEventData()">📅 Event Data</button>
-                    <button class="btn" onclick="requestUserData()">👤 User Data</button>
-                    <button class="btn" onclick="requestCompanyData()">🏢 Company Data</button>
                 </div>
             </div>
 
@@ -238,11 +227,11 @@
                 <h3>📝 Custom Message</h3>
                 <div class="input-group">
                     <label for="messageType">Message Type:</label>
-                    <input type="text" id="messageType" value="custom-event" placeholder="Enter message type">
+                    <input type="text" id="messageType" value="embed-viz-event-payload-data-overview-default-incident" placeholder="Enter message type">
                 </div>
                 <div class="input-group">
                     <label for="messageData">Message Data (JSON):</label>
-                    <textarea id="messageData" placeholder='{"key": "value"}'>{"action": "test", "data": "Hello from workbench!"}</textarea>
+                    <textarea id="messageData" placeholder='{"action": "DATA_REFRESH", "payload": {}}'>{"action": "DATA_REFRESH", "payload": {}}</textarea>
                 </div>
                 <button class="btn success" onclick="sendCustomMessage()">📤 Send</button>
             </div>
@@ -251,23 +240,21 @@
                 <h3>⚙️ Settings</h3>
                 <div class="input-group">
                     <label for="iframeUrl">Iframe URL:</label>
-                    <input type="text" id="iframeUrl" value="http://localhost:4001/" placeholder="Enter iframe URL">
+                    <input type="text" id="iframeUrl" value="http://localhost:4005/" placeholder="Enter iframe URL">
                 </div>
                 <button class="btn" onclick="reloadIframe()">🔄 Reload Iframe</button>
             </div>
 
             <div class="section">
-                <h3>📋 Sample Message</h3>
+                <h3>📋 Event Info</h3>
                 <div class="input-group">
-                    <label for="sampleMessage">Sample postMessage (JSON):</label>
-                    <textarea id="sampleMessage" readonly style="height:60px;">{
-  "type": "SIMULATE_ERROR",
-  "action": "ERROR",
-  "payload": { "message": "Simulated error from workbench" },
-  "target": "widget"
-}</textarea>
+                    <label>Event Name:</label>
+                    <input type="text" value="embed-viz-event-payload-data-overview-default-incident" readonly style="background-color: #1a1a1a;">
                 </div>
-                <button class="btn" onclick="copySampleMessage()">Copy Sample</button>
+                <div class="input-group">
+                    <label>Data Endpoint:</label>
+                    <input type="text" value="/viz-data/overview-default-incident" readonly style="background-color: #1a1a1a;">
+                </div>
             </div>
         </div>
 
@@ -280,7 +267,8 @@
             <div class="console" id="console">
                 <div class="console-line info">🚀 Widget Communication Workbench Started</div>
                 <div class="console-line info">📡 Listening for iframe messages...</div>
-                <div class="console-line timestamp">Ready to test iframe communication</div>
+                <div class="console-line info">📊 Force-Directed Graph Visualization</div>
+                <div class="console-line timestamp">Ready to test widget communication</div>
             </div>
         </div>
     </div>
@@ -293,12 +281,16 @@
         // Message counter for tracking
         let messageCounter = 0;
 
+        // Event name and endpoint for the force-directed graph
+        const EVENT_NAME = 'embed-viz-event-payload-data-overview-default-incident';
+        const DATA_ENDPOINT = '/viz-data/overview-default-incident';
+
         // Initialize workbench
         function initWorkbench() {
             log('info', 'Workbench initialized');
             
-            // Set the iframe URL to load the widget
-            const defaultUrl = 'http://localhost:4001/';
+            // Set the iframe URL to load the widget (using port 4005)
+            const defaultUrl = 'http://localhost:4005/';
             iframe.src = defaultUrl;
             document.getElementById('iframeUrl').value = defaultUrl;
             
@@ -342,85 +334,62 @@
             if (eventData && eventData.action === 'DATA_REQUEST') {
                 log('info', `Widget requesting data for type: ${eventData.type}`);
                 
-                // Determine which fixture data to load based on the event type
-                let dataType = 'sighting'; // default
-                let endpoint = '';
-                
-                // Map event types to fixture data types
-                if (eventData.type.includes('tree-sighting')) {
-                    dataType = 'sighting';
-                    endpoint = 'https://flow.typerefinery.localhost:8101/viz-data/tree-sighting';
-                } else if (eventData.type.includes('tree-task')) {
-                    dataType = 'task';
-                    endpoint = 'https://flow.typerefinery.localhost:8101/viz-data/tree-task';
-                } else if (eventData.type.includes('tree-impact')) {
-                    dataType = 'impact';
-                    endpoint = 'https://flow.typerefinery.localhost:8101/viz-data/tree-impact';
-                } else if (eventData.type.includes('tree-event')) {
-                    dataType = 'event';
-                    endpoint = 'https://flow.typerefinery.localhost:8101/viz-data/tree-event';
-                } else if (eventData.type.includes('tree-user') || eventData.type.includes('tree-me')) {
-                    dataType = 'user';
-                    endpoint = 'https://flow.typerefinery.localhost:8101/viz-data/tree-user';
-                } else if (eventData.type.includes('tree-company')) {
-                    dataType = 'company';
-                    endpoint = 'https://flow.typerefinery.localhost:8101/viz-data/tree-company';
-                } else if (eventData.type.includes('unattached-force-graph')) {
-                    dataType = 'sighting'; // Use sighting data for graph requests
-                    endpoint = 'https://flow.typerefinery.localhost:8101/viz-data/unattached-force-graph';
+                // Check if it's the overview-default-incident event
+                if (eventData.type === EVENT_NAME || eventData.type.includes('overview-default-incident')) {
+                    log('info', 'Loading overview-default-incident fixture data');
+                    
+                    // Load the fixture data and respond
+                    loadOverviewFixtureData().then(fixtureData => {
+                        const response = {
+                            ...eventData,
+                            target: 'iframe-embed_BD8EU3LCD',
+                            topicName: EVENT_NAME,
+                            eventName: 'readaction',
+                            endpointConfig: {
+                                method: 'GET',
+                                url: `http://localhost:8111${DATA_ENDPOINT}`
+                            },
+                            url: `http://localhost:8111${DATA_ENDPOINT}`,
+                            method: 'GET',
+                            payloadType: 'application/json',
+                            body: null,
+                            ok: true,
+                            data: fixtureData
+                        };
+                        
+                        // Send response back to widget
+                        setTimeout(() => {
+                            sendMessageToIframe(response);
+                            log('info', 'Sent overview-default-incident fixture data to widget');
+                        }, 100);
+                    }).catch(error => {
+                        log('error', `Failed to load overview-default-incident fixture data: ${error.message}`);
+                        
+                        // Send error response
+                        const errorResponse = {
+                            ...eventData,
+                            target: 'iframe-embed_BD8EU3LCD',
+                            topicName: EVENT_NAME,
+                            eventName: 'readaction',
+                            endpointConfig: {
+                                method: 'GET',
+                                url: `http://localhost:8111${DATA_ENDPOINT}`
+                            },
+                            url: `http://localhost:8111${DATA_ENDPOINT}`,
+                            method: 'GET',
+                            payloadType: 'application/json',
+                            body: null,
+                            ok: false,
+                            error: `Failed to load overview-default-incident data: ${error.message}`
+                        };
+                        
+                        setTimeout(() => {
+                            sendMessageToIframe(errorResponse);
+                        }, 100);
+                    });
+                } else {
+                    log('error', `Unknown event type: ${eventData.type}`);
                 }
-                
-                log('info', `Loading fixture data for type: ${dataType}`);
-                
-                // Load the appropriate fixture data and respond
-                loadFixtureData(dataType).then(fixtureData => {
-                    const response = {
-                        ...eventData,
-                        target: 'iframe-embed_BD8EU3LCD',
-                        topicName: eventData.type,
-                        eventName: 'readaction',
-                        endpointConfig: {
-                            method: 'GET',
-                            url: endpoint
-                        },
-                        url: endpoint,
-                        method: 'GET',
-                        payloadType: 'application/json',
-                        body: null,
-                        ok: true,
-                        data: fixtureData
-                    };
-                    
-                    // Send response back to widget
-                    setTimeout(() => {
-                        sendMessageToIframe(response);
-                        log('info', `Sent ${dataType} fixture data to widget`);
-                    }, 100);
-                }).catch(error => {
-                    log('error', `Failed to load fixture data for ${dataType}: ${error.message}`);
-                    
-                    // Send error response
-                    const errorResponse = {
-                        ...eventData,
-                        target: 'iframe-embed_BD8EU3LCD',
-                        topicName: eventData.type,
-                        eventName: 'readaction',
-                        endpointConfig: {
-                            method: 'GET',
-                            url: endpoint
-                        },
-                        url: endpoint,
-                        method: 'GET',
-                        payloadType: 'application/json',
-                        body: null,
-                        ok: false,
-                        error: `Failed to load ${dataType} data: ${error.message}`
-                    };
-                    
-                    setTimeout(() => {
-                        sendMessageToIframe(errorResponse);
-                    }, 100);
-                });
             }
             
             // Update status
@@ -478,150 +447,62 @@
             log('info', `Reloading iframe with URL: ${url}`);
         }
 
-        // Data request functions
-        function sendDataRequest() {
-            loadFixtureData('sighting').then(data => {
-                const message = {
-                    type: 'embed-viz-event-payload-data-unattached-force-graph',
-                    action: 'DATA_REFRESH',
-                    payload: {
-                        id: 'scratch',
-                        type: 'load'
-                    },
-                    data: data
-                };
-                sendMessageToIframe(message);
-            });
-        }
-
-        function requestSightingData() {
-            loadFixtureData('sighting').then(data => {
-                const message = {
-                    type: 'embed-viz-event-payload-data-tree-sighting',
-                    action: 'DATA_REFRESH',
-                    payload: {
-                        action: 'load_data',
-                        id: 'sighting',
-                        type: 'load'
-                    },
-                    data: data
-                };
-                sendMessageToIframe(message);
-            });
-        }
-
-        function requestTaskData() {
-            loadFixtureData('task').then(data => {
-                const message = {
-                    type: 'embed-viz-event-payload-data-tree-task',
-                    action: 'DATA_REFRESH',
-                    payload: {
-                        action: 'load_data',
-                        id: 'task',
-                        type: 'load'
-                    },
-                    data: data
-                };
-                sendMessageToIframe(message);
-            });
-        }
-
-        function requestImpactData() {
-            loadFixtureData('impact').then(data => {
-                const message = {
-                    type: 'embed-viz-event-payload-data-tree-impact',
-                    action: 'DATA_REFRESH',
-                    payload: {
-                        action: 'load_data',
-                        id: 'impact',
-                        type: 'load'
-                    },
-                    data: data
-                };
-                sendMessageToIframe(message);
-            });
-        }
-
-        function requestEventData() {
-            loadFixtureData('event').then(data => {
-                const message = {
-                    type: 'embed-viz-event-payload-data-tree-event',
-                    action: 'DATA_REFRESH',
-                    payload: {
-                        action: 'load_data',
-                        id: 'event',
-                        type: 'load'
-                    },
-                    data: data
-                };
-                sendMessageToIframe(message);
-            });
-        }
-
-        function requestUserData() {
-            loadFixtureData('user').then(data => {
-                const message = {
-                    type: 'embed-viz-event-payload-data-tree-user',
-                    action: 'DATA_REFRESH',
-                    payload: {
-                        action: 'load_data',
-                        id: 'user',
-                        type: 'load'
-                    },
-                    data: data
-                };
-                sendMessageToIframe(message);
-            });
-        }
-
-        function requestCompanyData() {
-            loadFixtureData('company').then(data => {
-                const message = {
-                    type: 'embed-viz-event-payload-data-tree-company',
-                    action: 'DATA_REFRESH',
-                    payload: {
-                        action: 'load_data',
-                        id: 'company',
-                        type: 'load'
-                    },
-                    data: data
-                };
-                sendMessageToIframe(message);
-            });
-        }
-
-        // Load fixture data from actual local files
-        async function loadFixtureData(dataType) {
+        // Load overview-default-incident fixture data
+        async function loadOverviewFixtureData() {
             try {
-                // Map data types to file names
-                const fileMap = {
-                    sighting: 'tree-sighting.json',
-                    task: 'tree-task.json',
-                    impact: 'tree-impact.json',
-                    event: 'tree-event.json',
-                    user: 'tree-me.json',
-                    company: 'tree-company.json'
-                };
-                
-                const fileName = fileMap[dataType];
-                if (!fileName) {
-                    throw new Error(`Unknown data type: ${dataType}`);
-                }
-                
-                // Load from actual local data file
-                const response = await fetch(`/src/assets/data/${fileName}`);
+                // Load from cypress fixtures path (served by webpack dev server)
+                const response = await fetch('/cypress/fixtures/src/assets/data/overview-default-incident.json');
                 if (!response.ok) {
-                    throw new Error(`Failed to load ${fileName}: ${response.status}`);
+                    throw new Error(`Failed to load fixture: ${response.status}`);
                 }
                 
                 const fixtureData = await response.json();
-                log('info', `Loaded ${dataType} fixture data from ${fileName} successfully`);
+                log('info', 'Loaded overview-default-incident fixture data successfully');
+                log('info', `Data contains ${fixtureData.nodes?.length || 0} nodes and ${fixtureData.edges?.length || 0} edges`);
                 return fixtureData;
             } catch (error) {
-                log('error', `Error loading ${dataType} fixture data: ${error.message}`);
-                // Throw the actual error instead of returning nonsense fallback data
+                log('error', `Error loading overview-default-incident fixture data: ${error.message}`);
                 throw error;
             }
+        }
+
+        // Request overview data
+        function requestOverviewData() {
+            loadOverviewFixtureData().then(data => {
+                const message = {
+                    type: EVENT_NAME,
+                    action: 'DATA_REFRESH',
+                    payload: {
+                        action: 'load_data',
+                        id: 'overview-default-incident',
+                        type: 'load',
+                        endpoint: DATA_ENDPOINT
+                    },
+                    componentId: `overview-default-incident-${EVENT_NAME}-load_data`,
+                    data: data
+                };
+                sendMessageToIframe(message);
+                log('info', 'Sent overview data to widget');
+            }).catch(error => {
+                log('error', `Failed to load overview data: ${error.message}`);
+            });
+        }
+
+        // Send data refresh event
+        function sendDataRefresh() {
+            const message = {
+                type: EVENT_NAME,
+                action: 'DATA_REFRESH',
+                payload: {
+                    action: 'load_data',
+                    id: 'overview-default-incident',
+                    type: 'load',
+                    endpoint: DATA_ENDPOINT
+                },
+                componentId: `overview-default-incident-${EVENT_NAME}-load_data`
+            };
+            sendMessageToIframe(message);
+            log('info', 'Sent DATA_REFRESH event to widget');
         }
 
         function sendCustomMessage() {
@@ -647,7 +528,7 @@
         // Simulate Error event
         function simulateError() {
             const errorMessage = {
-                type: "SIMULATE_ERROR",
+                type: EVENT_NAME,
                 action: "ERROR",
                 payload: { message: "Simulated error from workbench" },
                 target: "widget"
@@ -659,7 +540,7 @@
         // Simulate Timeout event
         function simulateTimeout() {
             const timeoutMessage = {
-                type: "SIMULATE_TIMEOUT",
+                type: EVENT_NAME,
                 action: "TIMEOUT",
                 payload: { message: "Simulated timeout from workbench" },
                 target: "widget"
@@ -671,7 +552,7 @@
         // Simulate Crash event
         function simulateCrash() {
             const crashMessage = {
-                type: "SIMULATE_CRASH",
+                type: EVENT_NAME,
                 action: "CRASH",
                 payload: { message: "Simulated crash from workbench" },
                 target: "widget"
@@ -686,8 +567,8 @@
             iframe.src = document.getElementById('iframeUrl').value;
             iframe.onload = function() {
                 const reloadMessage = {
-                    type: "RELOAD_WIDGET",
-                    action: "RELOAD",
+                    type: EVENT_NAME,
+                    action: "DATA_REFRESH",
                     payload: { message: "Workbench triggered widget reload" },
                     target: "widget"
                 };
@@ -696,35 +577,6 @@
             };
             log('info', 'Widget iframe reloaded');
         }
-
-        // Sample message section for quick copy-paste
-        function addSampleMessageSection() {
-            const sidebar = document.querySelector('.sidebar');
-            const section = document.createElement('div');
-            section.className = 'section';
-            section.innerHTML = `
-                <h3>📋 Sample Message</h3>
-                <div class="input-group">
-                    <label for="sampleMessage">Sample postMessage (JSON):</label>
-                    <textarea id="sampleMessage" readonly style="height:60px;">{
-  "type": "SIMULATE_ERROR",
-  "action": "ERROR",
-  "payload": { "message": "Simulated error from workbench" },
-  "target": "widget"
-}</textarea>
-                </div>
-                <button class="btn" onclick="copySampleMessage()">Copy Sample</button>
-            `;
-            sidebar.appendChild(section);
-        }
-        function copySampleMessage() {
-            const sample = document.getElementById('sampleMessage');
-            sample.select();
-            document.execCommand('copy');
-            log('info', 'Sample message copied to clipboard');
-        }
-        // Add sample message section on load
-        window.addEventListener('DOMContentLoaded', addSampleMessageSection);
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -740,27 +592,11 @@
                         break;
                     case '1':
                         e.preventDefault();
-                        requestSightingData();
+                        requestOverviewData();
                         break;
                     case '2':
                         e.preventDefault();
-                        requestTaskData();
-                        break;
-                    case '3':
-                        e.preventDefault();
-                        requestImpactData();
-                        break;
-                    case '4':
-                        e.preventDefault();
-                        requestEventData();
-                        break;
-                    case '5':
-                        e.preventDefault();
-                        requestUserData();
-                        break;
-                    case '6':
-                        e.preventDefault();
-                        requestCompanyData();
+                        sendDataRefresh();
                         break;
                 }
             }
@@ -770,4 +606,4 @@
         window.addEventListener('load', initWorkbench);
     </script>
 </body>
-</html> 
+</html>
