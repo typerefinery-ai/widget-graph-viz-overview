@@ -144,32 +144,96 @@ window.Widgets.Widget = {};
 
     /**
      * Clear all visualization data without reloading
+     * Removes all nodes, links, edge paths, and edge labels
+     * Stops the simulation and clears simulation data
+     * Keeps SVG structure (defs, arrowhead markers) intact
      */
     ns.clearData = function() {
         console.group(`widget clearData on ${window.location}`);
         
-        // Clear existing nodes, links, and labels (but keep SVG structure)
         const $component = $(ns.selectorComponent);
-        if ($component.length) {
-            const svg = d3.select($component.get(0)).select("svg");
-            if (!svg.empty()) {
-                const g = svg.select("g");
-                if (!g.empty()) {
-                    // Remove only visualization elements, keep defs (arrowhead marker)
-                    g.selectAll(".links").remove();
-                    g.selectAll(".edgepath").remove();
-                    g.selectAll(".edgelabel").remove();
-                    g.selectAll(".nodes").remove();
-                }
-            }
-            
-            // Stop existing simulation
-            if (ns.simulation) {
-                ns.simulation.stop();
-            }
+        if (!$component.length) {
+            console.warn("Component not found:", ns.selectorComponent);
+            console.groupEnd();
+            return;
         }
         
-        console.log("Data cleared");
+        // Stop and clear the simulation first (before removing DOM elements)
+        if (ns.simulation) {
+            console.log("Stopping simulation");
+            ns.simulation.stop();
+            // Clear all nodes and links from simulation
+            ns.simulation.nodes([]);
+            if (ns.simulation.force("link")) {
+                ns.simulation.force("link").links([]);
+            }
+            // Reset alpha to 0 to ensure it's stopped
+            ns.simulation.alpha(0);
+            // Remove tick event handler
+            ns.simulation.on("tick", null);
+        }
+        
+        let container = $component.get(0);
+        let svg = d3.select(container).select("svg");
+        
+        if (svg.empty()) {
+            console.warn("SVG not found in component");
+            console.groupEnd();
+            return;
+        }
+        
+        // Get the g element (the one with transform) - elements might be in root svg or in g
+        let g = svg.select("g");
+        
+        // Remove all visualization elements from both svg and g
+        // Remove links (line elements)
+        svg.selectAll(".links").remove();
+        svg.selectAll("line.links").remove();
+        if (!g.empty()) {
+            g.selectAll(".links").remove();
+            g.selectAll("line.links").remove();
+        }
+        
+        // Remove edge paths (path elements)
+        svg.selectAll(".edgepath").remove();
+        svg.selectAll("path.edgepath").remove();
+        if (!g.empty()) {
+            g.selectAll(".edgepath").remove();
+            g.selectAll("path.edgepath").remove();
+        }
+        
+        // Remove edge labels (text elements with textPath children)
+        svg.selectAll(".edgelabel").remove();
+        svg.selectAll("text.edgelabel").remove();
+        svg.selectAll("textPath").remove(); // Remove textPath elements too
+        if (!g.empty()) {
+            g.selectAll(".edgelabel").remove();
+            g.selectAll("text.edgelabel").remove();
+            g.selectAll("textPath").remove();
+        }
+        
+        // Remove nodes (g element containing image elements)
+        svg.selectAll(".nodes").remove();
+        svg.selectAll("g.nodes").remove();
+        svg.selectAll("g.nodes image").remove(); // Also remove images directly
+        if (!g.empty()) {
+            g.selectAll(".nodes").remove();
+            g.selectAll("g.nodes").remove();
+            g.selectAll("g.nodes image").remove();
+        }
+        
+        // Clear any data bound to remaining elements
+        svg.selectAll("*").data([]);
+        if (!g.empty()) {
+            g.selectAll("*").data([]);
+        }
+        
+        // Hide tooltip if visible
+        if (ns.tooltip) {
+            ns.tooltip.style("opacity", 0);
+        }
+        
+        console.log("Data and visualization cleared - all nodes, links, and labels removed");
         console.groupEnd();
     }
 
