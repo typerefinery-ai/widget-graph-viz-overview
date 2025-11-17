@@ -19,12 +19,12 @@ Cypress.Commands.add("waitForWidgetReady", () => {
       cy.get("#widgetFrame").then(($iframe) => {
         const doc = $iframe[0].contentDocument || $iframe[0].contentWindow.document;
         cy.wrap(doc.body).find('[component="graphviz"]', { timeout: 10000 }).should("be.visible");
-        cy.wrap(doc.body).find("#tree_panel", { timeout: 10000 }).should("exist");
+        cy.wrap(doc.body).find('[component="graphviz"] svg', { timeout: 10000 }).should("exist");
       });
     } else {
       // We're in direct widget context
       cy.get('[component="graphviz"]', { timeout: 10000 }).should("be.visible");
-      cy.get("#tree_panel", { timeout: 10000 }).should("exist");
+      cy.get('[component="graphviz"] svg', { timeout: 10000 }).should("exist");
     }
   });
 });
@@ -55,9 +55,19 @@ Cypress.Commands.add("checkToast", (type, message) => {
 
 // Custom command to wait for loading state to complete
 Cypress.Commands.add("waitForLoadingComplete", () => {
-  cy.get("#tree_panel").should("not.contain", "Loading tree data...");
-  cy.get("#tree_panel .loading-message").should("not.exist");
-  cy.get(".toastify").should("not.contain", "Loading");
+  // Wait for SVG to be rendered (indicates graph is loaded)
+  cy.get('[component="graphviz"] svg', { timeout: 15000 }).should("exist");
+  cy.get('[component="graphviz"] svg g', { timeout: 5000 }).should("exist");
+  // Dismiss any loading toasts
+  cy.get(".toastify").then(($toasts) => {
+    if ($toasts.length > 0) {
+      $toasts.each((index, toast) => {
+        if (toast.textContent && toast.textContent.includes("Loading")) {
+          cy.wrap(toast).find(".toast-close").click({ force: true });
+        }
+      });
+    }
+  });
 });
 
 // Custom command to click filter and wait for data load
@@ -66,10 +76,18 @@ Cypress.Commands.add("clickFilterAndWait", (filterId) => {
   cy.waitForLoadingComplete();
 });
 
-// Custom command to verify tree is rendered
+// Custom command to verify force-directed graph is rendered
+Cypress.Commands.add("verifyGraphRendered", () => {
+  cy.get('[component="graphviz"] svg').should("exist");
+  cy.get('[component="graphviz"] svg g').should("exist");
+  // Check for nodes (images) and links (lines)
+  cy.get('[component="graphviz"] svg .nodes').should("exist");
+  cy.get('[component="graphviz"] svg .links').should("exist");
+});
+
+// Legacy alias for backward compatibility
 Cypress.Commands.add("verifyTreeRendered", () => {
-  cy.get("#tree_panel svg").should("exist");
-  cy.get("#tree_panel svg g").should("exist");
+  cy.verifyGraphRendered();
 });
 
 // Custom command to get the iframe's body for widget assertions

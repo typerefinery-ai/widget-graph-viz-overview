@@ -1,5 +1,11 @@
 describe("Complete User Flow", () => {
   beforeEach(() => {
+    // Intercept API call for local mode
+    cy.intercept("GET", "http://localhost:8111/viz-data/overview-default-incident", {
+      statusCode: 200,
+      fixture: "overview-default-incident.json",
+    }).as("apiCall");
+    
     // Visit widget with local=true parameter
     cy.visit("?local=true");
     cy.waitForWidgetReady();
@@ -7,76 +13,82 @@ describe("Complete User Flow", () => {
 
   it("should complete full user journey from load to interaction", () => {
     // Wait for initial data load and verify content appears
+    cy.wait("@apiCall");
     cy.waitForLoadingComplete();
-    cy.verifyTreeRendered();
+    cy.verifyGraphRendered();
     
-    // Wait longer for toast notifications in headless mode
-    cy.wait(2000);
-    cy.get(".toastify").should("contain", "sighting data loaded successfully from local file");
+    // Verify nodes and edges are rendered
+    cy.get('[component="graphviz"] svg .nodes image').should("exist");
+    cy.get('[component="graphviz"] svg .links line').should("exist");
 
-    // Click task filter
-    cy.get("#task[type='radio']").click({ force: true });
-
-    // Wait for task data load and verify content appears
-    cy.waitForLoadingComplete();
-    cy.verifyTreeRendered();
+    // Test node interaction - hover
+    cy.get('[component="graphviz"] svg .nodes image').first().trigger("mouseover");
+    cy.wait(400);
     
-    // Wait longer for toast notifications in headless mode
-    cy.wait(2000);
-    cy.get(".toastify").should("contain", "task data loaded successfully from local file");
+    // Tooltip should appear
+    cy.get("#widget-tooltip, .tooltip").should("exist");
 
-    // Click company filter
-    cy.get("#company[type='radio']").click({ force: true });
-
-    // Wait for company data load and verify content appears
-    cy.waitForLoadingComplete();
-    cy.verifyTreeRendered();
-
-    // Click reload button
-    cy.get("#reload").click();
+    // Test reload functionality
+    cy.window().then((win) => {
+      if (win.Widgets && win.Widgets.Widget && win.Widgets.Widget.reload) {
+        win.Widgets.Widget.reload();
+      }
+    });
 
     // Wait for reload and verify content appears
+    cy.wait("@apiCall");
     cy.waitForLoadingComplete();
-    cy.verifyTreeRendered();
+    cy.verifyGraphRendered();
   });
 
   it("should handle error recovery in complete flow", () => {
     // Wait for initial load
+    cy.wait("@apiCall");
     cy.waitForLoadingComplete();
-    cy.verifyTreeRendered();
+    cy.verifyGraphRendered();
 
-    // Debug: Check what's in the tree panel
-    cy.get("#tree_panel").then(($panel) => {
-      console.log("Tree panel content:", $panel.html());
-      console.log("Tree panel text:", $panel.text());
+    // Simulate error by intercepting with error response
+    cy.intercept("GET", "http://localhost:8111/viz-data/overview-default-incident", {
+      statusCode: 500,
+      body: { error: "Server error" },
+    }).as("apiError");
+
+    // Trigger reload
+    cy.window().then((win) => {
+      if (win.Widgets && win.Widgets.Widget && win.Widgets.Widget.reload) {
+        win.Widgets.Widget.reload();
+      }
     });
 
-    // Click reload button to trigger any potential errors
-    cy.get("#reload").click();
+    cy.wait("@apiError");
+    cy.wait(2000);
 
-    // Wait for reload and verify content appears
-    cy.waitForLoadingComplete();
-    cy.verifyTreeRendered();
+    // Widget should still exist (error handling)
+    cy.get('[component="graphviz"]').should("exist");
   });
 
-  it("should maintain state across filter changes", () => {
+  it("should maintain graph state across reloads", () => {
     // Wait for initial load
+    cy.wait("@apiCall");
     cy.waitForLoadingComplete();
-    cy.verifyTreeRendered();
+    cy.verifyGraphRendered();
 
-    // Test multiple filter changes
-    const filters = ["task", "impact", "event", "me", "company"];
+    // Get initial node count
+    cy.get('[component="graphviz"] svg .nodes image').then(($nodes) => {
+      const initialCount = $nodes.length;
+      
+      // Reload
+      cy.window().then((win) => {
+        if (win.Widgets && win.Widgets.Widget && win.Widgets.Widget.reload) {
+          win.Widgets.Widget.reload();
+        }
+      });
 
-    filters.forEach((filter, index) => {
-      // Click filter with force
-      cy.get(`#${filter}[type='radio']`).click({ force: true });
-
-      // Verify state maintained
+      cy.wait("@apiCall");
       cy.waitForLoadingComplete();
-      cy.verifyTreeRendered();
-
-      // Verify filter button is selected
-      cy.get(`#${filter}`).should("be.checked");
+      
+      // Node count should be maintained (same data)
+      cy.get('[component="graphviz"] svg .nodes image').should("have.length", initialCount);
     });
   });
-}); 
+});

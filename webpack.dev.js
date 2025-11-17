@@ -1,4 +1,5 @@
 const { merge } = require('webpack-merge')
+require('dotenv').config()
 
 const common = require('./webpack.common')
 const { write } = require('@popperjs/core')
@@ -40,7 +41,7 @@ module.exports = merge(common, {
     liveReload: true,
     compress: false,
     hot: false,
-    port: 4001,
+    port: process.env.PORT || 4005,
     devMiddleware: {
         writeToDisk: true,
     }

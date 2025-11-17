@@ -1,8 +1,9 @@
 const { defineConfig } = require("cypress");
+require("dotenv").config();
 
 module.exports = defineConfig({
   e2e: {
-    baseUrl: "http://localhost:4001",
+    baseUrl: `http://localhost:${process.env.PORT || 4005}`,
     viewportWidth: 1200,
     viewportHeight: 800,
     video: true,

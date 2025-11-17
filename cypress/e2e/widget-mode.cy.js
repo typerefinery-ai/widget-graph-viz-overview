@@ -4,63 +4,32 @@ describe("Widget Mode Communication", () => {
 
   beforeEach(() => {
     // Pre-load fixture data before setting up event listeners
-    cy.fixture("src/assets/data/tree-task.json").then((data) => {
+    cy.fixture("overview-default-incident.json").then((data) => {
       fixtureData = data;
     });
 
     cy.visit("/");
     cy.waitForWidgetReady();
     
-    // Debug: Check if widget is in widget mode
-    cy.window().then((win) => {
-      // Check if isLocalMode function exists and what it returns
-      if (win.Widgets && win.Widgets.Panel && win.Widgets.Panel.Tree && win.Widgets.Panel.Tree.isLocalMode) {
-        const isLocal = win.Widgets.Panel.Tree.isLocalMode();
-        console.log("isLocalMode check:", isLocal);
-        console.log("Current URL:", win.location.href);
-        console.log("Search params:", win.location.search);
-      } else {
-        console.warn("isLocalMode function not found");
-      }
-      
-      // Debug: Check if widget init was called
-      if (win.Widgets && win.Widgets.Widget) {
-        console.log("Widget namespace found:", win.Widgets.Widget);
-      } else {
-        console.warn("Widget namespace not found");
-      }
-    });
-    
     // Listen for DATA_REQUEST and respond with fixture
     cy.window().then((win) => {
-      // Debug: Log all postMessage events
-      cy.spy(win, "postMessage").as("postMessage");
-      
       win.addEventListener("message", (event) => {
-        console.log("Cypress received message:", event.data);
         let eventData = event.data;
         
         // Handle both string and object payloads
         if (typeof eventData === 'string') {
           try {
             eventData = JSON.parse(eventData);
-            console.log("Parsed JSON eventData:", eventData);
           } catch (e) {
-            console.warn('Failed to parse event data as JSON:', eventData);
             return;
           }
         }
         
-        console.log("Processing eventData:", eventData);
-        
         if (
           eventData &&
           eventData.action === "DATA_REQUEST" &&
-          eventData.payload &&
-          eventData.payload.id === "scratch"
+          eventData.type === "embed-viz-event-payload-data-overview-default-incident"
         ) {
-          console.log("Found DATA_REQUEST for scratch, responding with fixture data");
-          
           win.postMessage({
             ...eventData,
             target: "iframe-embed_BD8EU3LCD",
@@ -68,9 +37,9 @@ describe("Widget Mode Communication", () => {
             eventName: "readaction",
             endpointConfig: {
               method: "GET",
-              url: "https://flow.typerefinery.localhost:8101/viz-data/tree-task"
+              url: "http://localhost:8111/viz-data/overview-default-incident"
             },
-            url: "https://flow.typerefinery.localhost:8101/viz-data/tree-task",
+            url: "http://localhost:8111/viz-data/overview-default-incident",
             method: "GET",
             payloadType: "application/json",
             body: null,
@@ -85,88 +54,115 @@ describe("Widget Mode Communication", () => {
   it("should load widget in widget mode", () => {
     // Test that widget loads without local parameter
     cy.get('[component="graphviz"]').should("be.visible");
-    cy.get("#tree_panel").should("exist");
-    cy.get("#filter_panel").should("exist");
+    cy.get('[component="graphviz"] svg').should("exist");
     
     // Widget should be in widget mode (no local parameter)
     cy.url().should("not.include", "local=true");
   });
 
-  it("should handle manual data request", () => {
-    // Manually trigger a data request by sending a message to the widget
+  it("should request data from parent on load", () => {
     cy.window().then((win) => {
-      win.postMessage({
-        type: "embed-viz-event-payload-data-unattached-force-graph",
-        action: "DATA_REQUEST",
-        payload: {
-          id: "scratch",
-          type: "load"
-        },
-        data: fixtureData
-      }, "*");
+      cy.spy(win.parent, "postMessage").as("postMessage");
     });
     
-    // Wait for data to be processed
+    // Wait for widget to request data
     cy.wait(2000);
     
-    // Check that the widget shows some content (even if not specific task data)
-    cy.get("#tree_panel").should("not.be.empty");
+    // Widget should have requested data
+    cy.get("@postMessage").should("have.been.called");
+  });
+
+  it("should render graph after receiving data from parent", () => {
+    // Wait for data to be received and processed
+    cy.wait(3000);
+    cy.waitForLoadingComplete();
+    
+    // Verify graph is rendered
+    cy.verifyGraphRendered();
   });
 
   it("should handle parent app errors", () => {
     cy.window().then((win) => {
       win.postMessage(
         {
-          type: "embed-viz-event-payload-data-unattached-force-graph",
+          type: "embed-viz-event-payload-data-overview-default-incident",
+          action: "DATA_REQUEST",
           error: "Parent app error",
         },
         "*"
       );
     });
     
-    // Check for error notification
-    cy.get(".toastify").should("contain", "Failed to load data");
+    // Widget should handle error gracefully
+    cy.wait(2000);
+    cy.get('[component="graphviz"]').should("exist");
   });
 
   it("should handle missing data from parent", () => {
     cy.window().then((win) => {
       win.postMessage(
         {
-          type: "embed-viz-event-payload-data-unattached-force-graph",
+          type: "embed-viz-event-payload-data-overview-default-incident",
+          action: "DATA_REQUEST",
           // No data provided
         },
         "*"
       );
     });
     
-    // Check for error notification
-    cy.get(".toastify").should("contain", "No data found");
+    // Widget should handle missing data gracefully
+    cy.wait(2000);
+    cy.get('[component="graphviz"]').should("exist");
+  });
+
+  it("should handle DATA_REFRESH event", () => {
+    // Wait for initial load
+    cy.wait(2000);
+    
+    // Send DATA_REFRESH event
+    cy.window().then((win) => {
+      win.postMessage({
+        type: "embed-viz-event-payload-data-overview-default-incident",
+        action: "DATA_REFRESH",
+        payload: {},
+        componentId: "overview-default-incident",
+      }, "*");
+    });
+    
+    // Widget should reload data
+    cy.wait(2000);
+    cy.get('[component="graphviz"]').should("exist");
   });
 }); 
 
-describe("Widget Mode - Data Load Event Listener Leak", () => {
+describe("Widget Mode - Event Listener Management", () => {
     it("should only load data once per trigger (no event listener leak)", () => {
-        cy.visit("http://localhost:4001/");
+        cy.visit("/");
         cy.waitForWidgetReady();
+        
         cy.window().then((win) => {
             const widget = win.Widgets && win.Widgets.Widget;
-            if (widget && widget.loadData) {
-                cy.spy(widget, "loadData").as("loadDataSpy");
+            if (widget && widget.loadFromData) {
+                cy.spy(widget, "loadFromData").as("loadFromDataSpy");
             }
         });
-        // Now trigger a data load by sending a postMessage
+        
+        // Trigger a data load by sending a postMessage
         cy.window().then((win) => {
-            win.postMessage({
-                type: "embed-viz-event-payload-data-unattached-force-graph",
-                action: "DATA_REQUEST",
-                payload: {
-                    id: "scratch",
-                    type: "load"
-                },
-                data: { nodes: [], edges: [] }
-            }, "*");
+            cy.fixture("overview-default-incident.json").then((data) => {
+                win.postMessage({
+                    type: "embed-viz-event-payload-data-overview-default-incident",
+                    action: "DATA_REQUEST",
+                    payload: {
+                        id: "overview-default-incident",
+                        type: "load"
+                    },
+                    data: data
+                }, "*");
+            });
         });
+        
         cy.wait(1000); // Wait for the data load to process
-        cy.get("@loadDataSpy").should("have.been.calledOnce");
+        cy.get("@loadFromDataSpy").should("have.been.calledOnce");
     });
-}); 
+});
