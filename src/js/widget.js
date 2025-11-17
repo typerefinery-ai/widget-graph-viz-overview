@@ -2,481 +2,478 @@
 //window.Widgets = {};  //  already defined in _namespace.js
 window.Widgets.Widget = {};
 
-//define your function to use in your component
-(function($, ns, componentsNs, eventsNs, d3, panelUtilsNs, panelFilterNs, panelTreeNs, panelPromoNs, panelScratchNs, document, window) {
+// Main visualization module - force-directed graph using D3
+(function($, ns, componentsNs, eventsNs, d3, document, window) {
     ns.version = '1.0.0';
 
     ns.selectorComponent = '[component="graphviz"]';
-    ns.selectorTooltipContainer = 'body';
 
+    // Data URL for event-based data loading
+    ns.dataUrl = '/viz-data/overview-default-incident';
+    ns.eventName = 'embed-viz-event-payload-data-overview-default-incident';
 
-    ns.scratch = '/viz-data/unattached-force-graph';
+    ns.config = {
+        prefix: "https://raw.githubusercontent.com/os-threat/images/main/img/",
+        shape: "rect-", //norm-, rnd-,
+        margin: {
+            top: 30,
+            right: 80,
+            bottom: 30,
+            left: 30
+        },
+        width: 1200,
+        radius: 50,
+        height: 1000
+    }
 
-    //keep track of all listeners and callbacks.
+    // Track listeners for event callbacks
     ns.listeners = new Map();
+
+    /**
+     * Check if running in local mode
+     * @returns {boolean} True if local mode (?local=true in URL)
+     */
+    ns.isLocalMode = function() {
+        return window.location.search.includes("local=true");
+    }
+
+    /**
+     * Request data from parent application via postMessage
+     */
+    ns.requestData = function() {
+        console.group(`widget requestData on ${window.location}`);
         
-    ns.raiseEventDataRequest = function(eventName, topics = [], eventAction, id, callbackFn) {      
-        console.group(`raiseEventDataRequest on ${window.location}`); 
-        const componentId = `${id}-${eventName}-${eventAction}`; 
+        const eventName = ns.eventName;
+        const topics = [eventName];
+        const eventAction = "load_data";
+        const id = "overview-default-incident";
+        const componentId = `${id}-${eventName}-${eventAction}`;
+        
         const payload = {
             action: eventAction,
             id: id,
-            type: 'load'
-        }
+            type: 'load',
+            endpoint: ns.dataUrl
+        };
         const config = "";
-
-        console.log("compileEventData", payload, eventName, eventAction, id, config);
-        const eventCompileData = eventsNs.compileEventData(payload, eventName, "DATA_REQUEST", componentId, config);
-
-        //add callback first
-        //make sure callback is unique for each listener, event name and action combination.
-        if (callbackFn) {
-            console.log("CallbackFn passed.");
-            if (ns.listeners.has(componentId)) {                
-                console.log("listener already exists, removing.");
-                const listener = ns.listeners.get(componentId);
-                if (listener.callbackFn === callbackFn) {
-                    console.log("callbackFn match.");
-                }
-            } else {
-                console.log("listener does not exist, adding.");
-                ns.listeners.set(componentId,{
-                    componentId: componentId,
-                    eventAction: eventAction,
-                    topics: topics,
-                    eventName: eventName,
-                    id: id,
-                    callbackFn: callbackFn
-                })
-
-                eventsNs.windowListener((eventData) => {
-                    console.group(`windowListener on ${window.location}`);
-                    console.log(eventData);
-                    const dataEventName = eventData.type || eventData.topicName;
-                    const { type, topicName, payload, action, componentId, config } = eventData;            
-                    const configAction = (config && config["action"]) ? config.action : "";
-                    const data = eventData.data;
-                    const eventPayload = eventData.payload;
-                    const eventPayloadAction = (eventPayload && eventPayload["action"]) ? eventPayload.action : "";
-                    const eventMatch = dataEventName === eventName || topics.includes(dataEventName) || action === eventAction || configAction === eventAction;
-                    console.log(["eventName", eventName]);
-                    console.log(["eventAction", eventAction]);
-                    console.log(["configAction", configAction]);
-                    console.log(["eventPayloadAction", eventPayloadAction]);
-                    console.log(["dataEventName", dataEventName]);
-                    console.log(["data", data]);
-                    console.log(["match", eventMatch]);
-                    console.log(["type", type]);
-                    console.log(["topicName", topicName]);
-                    console.log(["payload", payload]);
-                    console.log(["action", action]);
-                    console.log(["componentId", componentId]);
-                    console.log(["config", config]);
-                    if (eventMatch) {
-                        console.log(["eventName match, exec callback."]);
-                        if (ns.listeners.has(componentId)) {
-                            ns.listeners.get(componentId).callbackFn(eventData);
-                        } else {
-                            console.warning(`odd, listener for this even does not exist for this component ${componentId}.`);
-                        }
-                    } else {
-                        console.log(["eventName not match. ignore."]);
+        
+        console.log("Requesting data via event:", eventName, payload);
+        
+        const eventCompileData = eventsNs.compileEventData(
+            payload, 
+            eventName, 
+            "DATA_REQUEST", 
+            componentId, 
+            config
+        );
+        
+        // Register callback for response
+        if (!ns.listeners.has(componentId)) {
+            const $component = $(ns.selectorComponent);
+            ns.listeners.set(componentId, {
+                componentId: componentId,
+                eventAction: eventAction,
+                topics: topics,
+                eventName: eventName,
+                id: id,
+                callbackFn: function(eventData) {
+                    console.log("Data received from parent:", eventData);
+                    const $currentComponent = $(ns.selectorComponent);
+                    if (eventData && eventData.data) {
+                        ns.loadFromData($currentComponent, eventData.data);
+                    } else if (eventData && eventData.error) {
+                        console.error("Error loading data:", eventData.error);
                     }
-                    console.groupEnd();
-                });
-                console.log("windowListener added", componentId, ns.listeners);
-            }
+                }
+            });
+            
+            // Listen for parent response
+            eventsNs.windowListener((eventData) => {
+                const dataEventName = eventData.type || eventData.topicName;
+                const { type, topicName, payload, action, componentId: eventComponentId } = eventData;
+                
+                const eventMatch = dataEventName === eventName || 
+                                 topics.includes(dataEventName) || 
+                                 action === eventAction;
+                
+                if (eventMatch && ns.listeners.has(componentId)) {
+                    ns.listeners.get(componentId).callbackFn(eventData);
+                }
+            });
         }
-
-        //then raise event
-        console.log("raiseEvent", eventName, eventCompileData);
+        
+        // Raise event to parent
         eventsNs.raiseEvent(eventName, eventCompileData);
-        console.log("raiseEvent done", eventName);
-
         console.groupEnd();
     }
 
-    ns.requestData = function() {
-        console.group(`requestData on ${window.location}`);
-
-        // Show loading notification
-        panelUtilsNs.showNotification('loading', "Loading graph data...");
-
-        console.log("request data");
-        //request panel data
-        ns.raiseEventDataRequest("embed-viz-event-payload-data-unattached-force-graph", ["embed-viz-event-payload-data-unattached-force-graph"], "load_data", "scratch", (eventData) => {
-            console.log("raiseEventDataRequest callback loadData scratch", eventData);
-            
-            // Dismiss loading notifications
-            if (window.Widgets && window.Widgets.Notifications) {
-                // Remove all toast elements that contain "Loading" text
-                const loadingToasts = document.querySelectorAll(".toastify");
-                loadingToasts.forEach((toast) => {
-                    if (toast.textContent && toast.textContent.includes("Loading")) {
-                        toast.remove();
-                    }
-                });
-            }
-            
-            if (eventData) {
-                if (eventData.error) {
-                    console.error(eventData.error);
-                    panelUtilsNs.showNotification('error', `Failed to load data: ${eventData.error}`);
-                    return;
+    /**
+     * Load data from local API endpoint
+     */
+    ns.loadDataFromAPI = function() {
+        console.group(`widget loadDataFromAPI on ${window.location}`);
+        
+        const apiBaseUrl = "http://localhost:8111";
+        const fullUrl = apiBaseUrl + ns.dataUrl;
+        
+        console.log("Loading data from API:", fullUrl);
+        
+        fetch(fullUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                if (eventData.data) {
-                    ns.loadData(eventData.data);
-                    panelUtilsNs.showNotification('success', "Graph data loaded successfully");
+                return response.json();
+            })
+            .then(data => {
+                console.log("Data loaded from API:", data);
+                const $component = $(ns.selectorComponent);
+                if ($component.length) {
+                    ns.loadFromData($component, data);
                 } else {
-                    console.error("No data found");
-                    panelUtilsNs.showNotification('error', "No data found");
+                    console.error("Component not found:", ns.selectorComponent);
                 }
-            } else {
-                panelUtilsNs.showNotification('error', "Failed to load data");
-            }
-        });
-        console.log("requestData done");
-
-        console.groupEnd();
+            })
+            .catch(error => {
+                console.error("Error loading data from API:", error);
+            })
+            .finally(() => {
+                console.groupEnd();
+            });
     }
 
-    ns.loadData = function(data) {
-        console.group(`Load Data on ${window.location}`);
-        console.log(data);
-
-        let graphData = data;
-        if (!graphData || typeof graphData !== "object") {
-            console.warn("loadData received invalid data payload, creating default graph");
-            graphData = ns.createDefaultGraphData({ name: "Unknown Data" });
-        } else if (!graphData.nodes || !graphData.edges) {
-            if (graphData.children && Array.isArray(graphData.children)) {
-                console.log("loadData detected tree structure, converting to graph");
-                graphData = ns.convertTreeToGraph(graphData);
-            } else {
-                console.log("loadData creating default graph representation for payload");
-                graphData = ns.createDefaultGraphData(graphData);
+    /**
+     * Reload data - supports both local and widget modes
+     */
+    ns.reload = function() {
+        console.group(`widget reload on ${window.location}`);
+        
+        // Clear existing nodes, links, and labels (but keep SVG structure)
+        const $component = $(ns.selectorComponent);
+        if ($component.length) {
+            const svg = d3.select($component.get(0)).select("svg");
+            if (!svg.empty()) {
+                const g = svg.select("g");
+                if (!g.empty()) {
+                    // Remove only visualization elements, keep defs (arrowhead marker)
+                    g.selectAll(".links").remove();
+                    g.selectAll(".edgepath").remove();
+                    g.selectAll(".edgelabel").remove();
+                    g.selectAll(".nodes").remove();
+                }
+            }
+            
+            // Stop existing simulation
+            if (ns.simulation) {
+                ns.simulation.stop();
             }
         }
+        
+        // Reload data based on mode
+        if (ns.isLocalMode()) {
+            console.log("Reloading in local mode");
+            ns.loadDataFromAPI();
+        } else {
+            console.log("Reloading in widget mode");
+            ns.requestData();
+        }
+        
+        console.groupEnd();
+    }
 
-        //TODO: clear existing data and visuals in tree
-        panelUtilsNs.processGraphData(graphData);
+    ns.syntaxHighlight = function(json) {
+        if (typeof json != 'string') {
+             json = JSON.stringify(json, undefined, 2);
+        }
+        if (!json || json === 'undefined') {
+            return "";
+        }
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            var cls = 'number';
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'key';
+                } else {
+                    cls = 'string';
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'boolean';
+            } else if (/null/.test(match)) {
+                cls = 'null';
+            }
+            return '<span class="' + cls + '">' + match + '</span>';
+        });
+    }
 
-        //TODO: clear existing data and visuals in promo
-        panelPromoNs.simGraph()
-        panelPromoNs.showGraph();
+    //create a simulation for an array of nodes, and compose the desired forces.
+    ns.forceSimulation = function(width, height) {
+        return d3.forceSimulation()
+            .force("link", d3.forceLink() // This force provides links between nodes
+                            .id(d => d.id) // This sets the node id accessor to the specified function. If not specified, will default to the index of a node.
+            ) 
+            .force("charge", d3.forceManyBody().strength(-500)) // This adds repulsion (if it's negative) between nodes. 
+            .force("center", d3.forceCenter(width / 2, height / 2)); // This force attracts nodes to the center of the svg area
+    }
 
-        //TODO: clear existing data and visuals in sim
-        panelScratchNs.simGraph();
-        panelScratchNs.showGraph();
+    ns.loadFromData = function($component, data) {
+
+        console.group(`widget loadFromData on ${window.location}`);
+
+        let container = $component.get(0)
+
+        let svg = d3.select(container)
+            .select("svg")
+
+        // Initialize the links
+        let link = svg.selectAll(".links")
+            .data(data.edges)
+            .join("line")
+            .attr("class", "links")
+            .attr("source", (d) => d.source)
+            .attr("target", (d) => d.target)
+            .attr("stroke-width", 0.75)
+            .attr("stroke", "grey")
+            .attr('marker-end','url(#arrowhead)'); //The marker-end attribute defines the arrowhead or polymarker that will be drawn at the final vertex of the given shape.
+
+        let edgepaths = svg.selectAll(".edgepath") //make path go along with the link provide position for link labels
+                .data(data.edges)
+                .join('path')
+                .attr('class', 'edgepath')
+                .attr('fill-opacity', 0)
+                .attr('stroke-opacity', 0)
+                .attr('id', function (d, i) {return 'edgepath' + i})
+                .style("pointer-events", "none");
+
+        const edgelabels = svg.selectAll(".edgelabel")
+            .data(data.edges)
+            .join('text')
+            .style("pointer-events", "none")
+            .attr('class', 'edgelabel')
+            .attr('id', function (d, i) {return 'edgelabel' + i})
+            .attr('font-size', 18)
+            .attr('fill', '#aaa');
+
+
+        edgelabels.append('textPath') //To render text along the shape of a <path>, enclose the text in a <textPath> element that has an href attribute with a reference to the <path> element.
+            .attr('xlink:href', function (d, i) {return '#edgepath' + i})
+            .style("text-anchor", "middle")
+            .style("pointer-events", "none")
+            .attr("startOffset", "50%")
+            .text(d => d.label);
+
+        // Initialize the nodes
+        // add hover over effect
+        const node = svg.append("g")
+            .attr("class", "nodes")
+            .selectAll("image")
+            .data(data.nodes)
+            .join("image")
+            .attr("xlink:href",  function(d) { return (ns.config.prefix + ns.config.shape + d.icon + ".svg");})
+            .attr("width",  function(d) { return ns.config.radius + 5;})
+            .attr("height", function(d) { return ns.config.radius + 5;})
+            .on("mouseover", function(d){d3.select(this)
+                                        .transition()
+                                        .duration(350)
+                                        .attr("width",  70)
+                                        .attr("height", 70)
+                                    })
+            .on("mouseout", function(d){d3.select(this)
+                                        .transition()
+                                        .duration(350)
+                                        .attr("width",  function(d) { return ns.config.radius;})
+                                        .attr("height", function(d) { return ns.config.radius;})
+                                    })
+            .on('mouseover.tooltip', function(d) {
+                console.log("mouseover.tooltip ", d3.event);
+                var x = d.clientX; // $(this).attr("x");
+                var y = d.clientY; //$(this).attr("y");
+                
+                console.log("x ", x, " y ", y);
+                ns.tooltip.transition()
+                    .duration(300)
+                    .style("opacity", .8);
+                ns.tooltip.html("<pre>"+ns.syntaxHighlight(d3.select(this).datum()) +"</pre>")
+                    .style("left", (x) + "px")
+                    .style("top", (y + 10) + "px")
+                    .style("opacity", .8);
+                })
+            .on("mouseout.tooltip", function() {
+                console.log("mouseout.tooltip");
+                ns.tooltip.transition()
+                    .duration(100)
+                    .style("opacity", 0);
+                })
+            .on("mousemove", function(e) {
+                console.log("mousemove", e);
+                var x = e.clientX; // $(this).attr("x");
+                var y = e.clientY; //$(this).attr("y");
+
+                console.log("x ", x, " y ", y);
+                ns.tooltip.style("left", x + "px")
+                    .style("top", (y + 10) + "px");
+                })
+            .call(d3.drag()  //sets the event listener for the specified typenames and returns the drag behavior.
+                .on("start", function(d) {
+                    if (!d3.event.active) {
+                        ns.simulation.alphaTarget(0.3).restart();//sets the current target alpha to the specified number in the range [0,1].
+                    }
+                    d.fy = d.y; //fx - the node's fixed x-position. Original is null.
+                    d.fx = d.x; //fy - the node's fixed y-position. Original is null.
+                }) //start - after a new pointer becomes active (on mousedown or touchstart).
+                .on("drag", function(d) {
+                    d.fx = d3.event.x;
+                    d.fy = d3.event.y;
+                })      //drag - after an active pointer moves (on mousemove or touchmove).
+                .on("end", function(d) {
+                    if (!d3.event.active) {
+                        ns.simulation.alphaTarget(0);
+                    }
+                    d.fx = null;
+                    d.fy = null;
+                })     //end - after an active pointer becomes inactive (on mouseup, touchend or touchcancel).
+            );
+
+        //Listen for tick events to render the nodes as they update in your Canvas or SVG.
+        ns.simulation
+            .nodes(data.nodes) //sets the simulation's nodes to the specified array of objects, initializing their positions and velocities, and then re-initializes any bound forces;
+            .on("tick", function() {
+                link.attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+                node.attr("x", d => d.x - ns.config.radius/2)
+                    .attr("y", d => d.y - ns.config.radius/2);
+
+                edgepaths.attr('d', d => 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y);
+            })
+
+        ns.simulation.force("link")
+            .links(data.edges)
+            .distance(function() {return 4 * ns.config.radius;});
 
         
-        // Show success notification
-        panelUtilsNs.showNotification('success', "Data loaded into all panels successfully");
-
         console.groupEnd();
     }
 
-    ns.addEventListener = ($component, componentConfig) => {
-        console.group(`addEventListener on ${window.location}`);
-        // Prevent multiple registrations of the windowListener
-        if (ns._eventListenerRegistered) {
-            console.log("Event listener already registered, skipping.");
+
+    ns.init = function($component) {
+        console.group(`widget init on ${window.location}`);
+        
+        // Prevent multiple initializations
+        if ($component.data("widget-initialized")) {
+            console.log("Widget already initialized, skipping.");
             console.groupEnd();
             return;
         }
-        ns._eventListenerRegistered = true;
-        const { events, id } = componentConfig;
-        const defaultTopic = id;
-  
-        console.log(["config", events, id, defaultTopic]);
+        $component.data("widget-initialized", true);
+        
+        console.log($component);
 
-        console.log(["addEventListener windowListener"]);
-        eventsNs.windowListener((data) => {
-            console.group(`windowListener on ${window.location}`);
+        // Get container dimensions
+        const width = $component.width() || ns.config.width;
+        const height = $component.height() || ns.config.height;
+
+        //init d3 force simulation
+        ns.simulation = ns.forceSimulation(width, height);
+
+        let container = $component.get(0)
+
+        //create svg
+        let svg = d3.select(container)
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(" + ns.config.margin.left + "," + ns.config.margin.top + ")");
+
+        //create tooltip - create new one if doesn't exist
+        if (!window.Widgets.Widget.tooltip) {
+            ns.tooltip = d3.select("body")
+                .append("div")
+                .attr('class', 'tooltip')
+                .attr('id', 'widget-tooltip')
+                .style('display', 'block')
+                .style("position", "absolute")
+                .style("z-index", "10")
+                .style("background-color", "white")
+                .style("border", "solid")
+                .style("border-width", "1px")
+                .style("border-color", "black")
+                .style("border-radius", "5px")
+                .style("padding", "5px")
+                .style("max-width", "900px")
+                .style("overflow-x", "auto")
+                .style('opacity', 0);
+            window.Widgets.Widget.tooltip = ns.tooltip;
+        } else {
+            ns.tooltip = window.Widgets.Widget.tooltip;
+        }
+
+        console.log("ns.tooltip", ns.tooltip);
+
+        //create arrowhead marker
+        let arrowhead = svg.append('defs').append('marker')
+            .attr("id",'arrowhead')
+            .attr('viewBox','-0 -5 10 10')
+            .attr('refX', ns.config.radius * 1.25)
+            .attr('refY',0)
+            .attr('orient','auto')
+            .attr('markerWidth',10)
+            .attr('markerHeight',10)
+            .attr('xoverflow','visible')
+            .append('svg:path')
+            .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+            .attr('fill', '#999')
+            .style('stroke','none');
+
+        //create zoom handler 
+        var zoom_handler = d3.zoom()
+        .on("zoom", function(){
+            svg.attr("transform", d3.event.transform);
+        });
+
+        zoom_handler(svg);
+
+        // Set up event listener for DATA_REFRESH
+        eventsNs.windowListener((eventData) => {
+            console.group(`widget windowListener on ${window.location}`);
             try {
-                console.log(data);
-                const { type, payload, action, componentId, config } = data;
-                console.log(["type", type]);
-                console.log(["payload", payload]);
-                console.log(["action", action]);
-                console.log(["componentId", componentId]);
-                console.log(["config", config]);
-
-                // listen for specific event
+                const { type, payload, action, componentId, config } = eventData;
+                
                 if (action === "DATA_REFRESH") {
-                    console.log(["action match, data has changed refreshing data."]);
-                    
-                    // Check if data is provided in the message
-                    if (data.data) {
-                        console.log("Data provided in DATA_REFRESH message, loading directly");
-                        ns.loadData(data.data);
-                        panelUtilsNs.showNotification('success', "Data refreshed successfully");
-                    } else {
-                        console.log("No data in message, requesting fresh data");
-                        ns.requestData();
-                    }
-                } else {
-                    console.log(["action not match, ignore."]);
+                    console.log("DATA_REFRESH received, reloading data");
+                    ns.reload();
                 }
             } catch (error) {
-                console.error("Error in windowListener", error);
+                console.error("Error in widget windowListener", error);
             } finally {
                 console.groupEnd();
             }
         });
 
-        console.log(["addEventListener windowListener done"]);
+        // Load data based on mode
+        if (ns.isLocalMode()) {
+            console.log("Local mode detected, loading from API");
+            ns.loadDataFromAPI();
+        } else {
+            console.log("Widget mode detected, requesting data from parent");
+            ns.requestData();
+        }
+        
         console.groupEnd();
     }
 
-    ns.init = function($component) {
-        // Prevent multiple initializations for the same component
-        if ($component.data("widget-initialized")) {
-            console.log("Widget already initialized for this component, skipping.");
-            return;
-        }
-        $component.data("widget-initialized", true);
-        
-        console.group(`widget.init on ${window.location}`);
-        try {
-            console.log(d3, componentsNs, eventsNs);
-
-
-            if (!panelUtilsNs.theme) {
-                if (panelUtilsNs.options.theme === 'light') {
-                    panelUtilsNs.theme = panelUtilsNs.options.light_theme
-                } else {
-                    panelUtilsNs.theme = panelUtilsNs.options.dark_theme
-                }
-            }
-
-
-            // init tree
-
-            const $tree_panel = $component.find(panelTreeNs.selectorComponent);
-
-            panelTreeNs.init($tree_panel, window.Widgets.Panel.Utils.options, $component.closest(ns.selectorTooltipContainer));
-
-
-            //init filter
-
-            const $filter_panel = $component.find(panelFilterNs.selectorComponent);
-
-            panelFilterNs.init($filter_panel, window.Widgets.Panel.Utils.options);
-
-            ns.tooltip = d3.select("body")
-                .append("div")
-                .attr('class', 'tooltip')
-                .attr('id', 'tooltip')
-                .style('display', 'block')
-                .style("position", "absolute")
-                .style("z-index", "10")
-                .style("background-color", panelUtilsNs.theme.tooltip.fill)
-                .style("border", "solid")
-                .style("border-width",  panelUtilsNs.theme.tooltip.stroke)
-                .style("border-color",  panelUtilsNs.theme.tooltip.scolour)
-                .style("border-radius",  panelUtilsNs.theme.tooltip.corner)
-                .style("max-width", panelUtilsNs.theme.tooltip.maxwidth)
-                .style("overflow-x", panelUtilsNs.theme.tooltip.overeflow)
-                .style("padding",  panelUtilsNs.theme.tooltip.padding)
-                .style('opacity', 0);
-
-
-
-            const $promo_panel = $component.find(panelPromoNs.selectorComponent);
-
-            panelPromoNs.init($promo_panel, window.Widgets.Panel.Utils.options);
-
-            const $scratch_panel = $component.find(panelScratchNs.selectorComponent);
-
-            panelScratchNs.init($scratch_panel, window.Widgets.Panel.Utils.options);
-
-            console.log("Initializing data loading...");
-            
-            // Check if we're in local mode and load appropriate data
-            const isLocal = panelTreeNs.isLocalMode();
-            console.log(`Local mode check in widget init: ${isLocal}`);
-            console.log(`Current URL: ${window.location.href}`);
-            console.log(`Search params: ${window.location.search}`);
-            
-            if (isLocal) {
-                console.log("Local mode detected, loading tree data from API");
-                // Wait a moment for tree panel to be fully initialized
-                setTimeout(() => {
-                    // Load initial tree data in local mode
-                    const defaultType = panelUtilsNs.options.tree_data_default || "sighting";
-                    console.log(`Calling updateTree with default type: ${defaultType}`);
-                    console.log(`Tree panel namespace:`, panelTreeNs);
-                    console.log(`UpdateTree function:`, panelTreeNs.updateTree);
-                    panelTreeNs.updateTree(defaultType);
-                }, 100);
-            } else {
-                console.log("Widget mode, requesting data from parent");
-                // send event to parent to get data
-                ns.requestData();
-            }
-
-            // on component mouse over hide tooltip
-            $component.on('mouseover', function() {
-                panelUtilsNs.hideTooltip();
-            });
-            
-            // add event listener to liste to other events.
-            ns.addEventListener($component, window.Widgets.Panel.Utils.options);
-
-        } catch (error) {
-            console.error("Error in widget.init", error);
-        } finally {
-            console.log("widget.init done");
-            console.groupEnd();
-        }
-
-    };
-
-    /**
-     * Convert tree data structure to graph format (nodes and edges)
-     * @param {Object} treeData - Tree data with children structure
-     * @returns {Object} Graph data with nodes and edges arrays
-     */
-    ns.convertTreeToGraph = function(treeData) {
-        console.log("Converting tree data to graph format");
-        
-        const nodes = [];
-        const edges = [];
-        const nodeMap = new Map();
-        
-        function processNode(node, parentId = null) {
-            const nodeId = node.id || `node-${nodes.length}`;
-            
-            // Add node if not already processed
-            if (!nodeMap.has(nodeId)) {
-                nodes.push({
-                    id: nodeId,
-                    name: node.name || node.heading || nodeId,
-                    type: node.type || 'unknown',
-                    icon: node.icon || 'default',
-                    description: node.description || '',
-                    original: node.original || {}
-                });
-                nodeMap.set(nodeId, true);
-            }
-            
-            // Add edge from parent if exists
-            if (parentId) {
-                edges.push({
-                    source: parentId,
-                    target: nodeId,
-                    type: 'parent-child'
-                });
-            }
-            
-            // Process children recursively
-            if (node.children && Array.isArray(node.children)) {
-                node.children.forEach(child => processNode(child, nodeId));
-            }
-        }
-        
-        // Start processing from root
-        processNode(treeData);
-        
-        console.log(`Converted tree to graph: ${nodes.length} nodes, ${edges.length} edges`);
-        return { nodes, edges };
-    }
-
-    /**
-     * Create default graph data from any data structure
-     * @param {Object} data - Any data structure
-     * @returns {Object} Default graph data with nodes and edges arrays
-     */
-    ns.createDefaultGraphData = function(data) {
-        console.log("Creating default graph data from data structure");
-        
-        const nodes = [];
-        const edges = [];
-        
-        // Create a default node from the data
-        const defaultNode = {
-            id: 'default-node',
-            name: data.name || data.heading || 'Data Node',
-            type: data.type || 'default',
-            icon: data.icon || 'default',
-            description: data.description || 'Default data node',
-            original: data
-        };
-        
-        nodes.push(defaultNode);
-        
-        // If data has properties, create additional nodes
-        if (data && typeof data === 'object') {
-            Object.keys(data).forEach((key, index) => {
-                if (key !== 'name' && key !== 'heading' && key !== 'type' && key !== 'icon' && key !== 'description' && key !== 'children' && key !== 'nodes' && key !== 'edges') {
-                    const propertyNode = {
-                        id: `property-${key}`,
-                        name: key,
-                        type: 'property',
-                        icon: 'property',
-                        description: `Property: ${key}`,
-                        original: { value: data[key] }
-                    };
-                    
-                    nodes.push(propertyNode);
-                    
-                    // Add edge from default node to property node
-                    edges.push({
-                        source: 'default-node',
-                        target: `property-${key}`,
-                        type: 'has-property'
-                    });
-                }
-            });
-        }
-        
-        console.log(`Created default graph: ${nodes.length} nodes, ${edges.length} edges`);
-        return { nodes, edges };
-    }
-
-    // Add global message listener for simulation and reload events
-    window.addEventListener('message', function(event) {
-        let eventData = event.data;
-        if (typeof eventData === 'string') {
-            try {
-                eventData = JSON.parse(eventData);
-            } catch (e) {}
-        }
-        if (!eventData || typeof eventData !== 'object') return;
-        switch (eventData.type) {
-            case 'SIMULATE_ERROR':
-                panelUtilsNs.showNotification('error', eventData.payload && eventData.payload.message ? eventData.payload.message : 'Simulated error received');
-                break;
-            case 'SIMULATE_TIMEOUT':
-                panelUtilsNs.showNotification('error', eventData.payload && eventData.payload.message ? eventData.payload.message : 'Simulated timeout received');
-                break;
-            case 'SIMULATE_CRASH':
-                panelUtilsNs.showNotification('error', eventData.payload && eventData.payload.message ? eventData.payload.message : 'Simulated crash received');
-                break;
-            case 'RELOAD_WIDGET':
-                panelUtilsNs.showNotification('info', eventData.payload && eventData.payload.message ? eventData.payload.message : 'Widget reload triggered');
-                setTimeout(() => { window.location.reload(); }, 500);
-                break;
-            default:
-                // ignore
-        }
-    });
-
 })(
-    /*$*/   window.jQuery,
-    /*ns*/  window.Widgets.Widget,
-    /*componentsNs*/ window.Widgets, 
-    /*eventsNs*/ window.Widgets.Events,
-    /*d3*/ window.d3, 
-    /*panelUtilsNs*/ window.Widgets.Panel.Utils,
-    /*panelFilterNs*/ window.Widgets.Panel.Filter,
-    /*panelTreeNs*/ window.Widgets.Panel.Tree,
-    /*panelPromoNs*/ window.Widgets.Panel.Promo,
-    /*panelScratchNs*/ window.Widgets.Panel.Scratch,
-    /*document*/ document,
-    /*window*/ window);
-
+    window.jQuery, 
+    window.Widgets.Widget, 
+    window.Widgets, 
+    window.Widgets.Events, 
+    window.d3, 
+    document, 
+    window
+);
 
 //define your behaviour how will this component will be added to DOM.
 (function($, ns, componentsNs, document, window) {
