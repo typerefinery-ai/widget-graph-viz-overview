@@ -1,12 +1,15 @@
 window.Widgets.Simulation = {};
 
-//TODO: remove as not required
-(function ($, ns, d3, document, window) {
-    ns.selectorComponent = '#object_form';
+// Main visualization module - replaces widget.js panel-based architecture
+(function ($, ns, d3, eventsNs, componentsNs, document, window) {
+    ns.selectorComponent = '[component="graphviz"]';
+
+    // Data URL for event-based data loading
+    ns.dataUrl = '/viz-data/overview-default-incident';
+    ns.eventName = 'embed-viz-event-payload-data-overview-default-incident';
 
     ns.config = {
         prefix: "https://raw.githubusercontent.com/os-threat/images/main/img/",
-        dataFile: "data/n_and_e.json",
         shape: "rect-", //norm-, rnd-,
         margin: {
             top: 30,
@@ -14,9 +17,164 @@ window.Widgets.Simulation = {};
             bottom: 30,
             left: 30
         },
-        with: 1200,
+        width: 1200,
         radius: 50,
         height: 1000
+    }
+
+    // Track listeners for event callbacks
+    ns.listeners = new Map();
+
+    /**
+     * Check if running in local mode
+     * @returns {boolean} True if local mode (?local=true in URL)
+     */
+    ns.isLocalMode = function() {
+        return window.location.search.includes("local=true");
+    }
+
+    /**
+     * Request data from parent application via postMessage
+     */
+    ns.requestData = function() {
+        console.group(`simulation requestData on ${window.location}`);
+        
+        const eventName = ns.eventName;
+        const topics = [eventName];
+        const eventAction = "load_data";
+        const id = "overview-default-incident";
+        const componentId = `${id}-${eventName}-${eventAction}`;
+        
+        const payload = {
+            action: eventAction,
+            id: id,
+            type: 'load',
+            endpoint: ns.dataUrl
+        };
+        const config = "";
+        
+        console.log("Requesting data via event:", eventName, payload);
+        
+        const eventCompileData = eventsNs.compileEventData(
+            payload, 
+            eventName, 
+            "DATA_REQUEST", 
+            componentId, 
+            config
+        );
+        
+        // Register callback for response
+        if (!ns.listeners.has(componentId)) {
+            const $component = $(ns.selectorComponent);
+            ns.listeners.set(componentId, {
+                componentId: componentId,
+                eventAction: eventAction,
+                topics: topics,
+                eventName: eventName,
+                id: id,
+                callbackFn: function(eventData) {
+                    console.log("Data received from parent:", eventData);
+                    const $currentComponent = $(ns.selectorComponent);
+                    if (eventData && eventData.data) {
+                        ns.loadFromData($currentComponent, eventData.data);
+                    } else if (eventData && eventData.error) {
+                        console.error("Error loading data:", eventData.error);
+                    }
+                }
+            });
+            
+            // Listen for parent response
+            eventsNs.windowListener((eventData) => {
+                const dataEventName = eventData.type || eventData.topicName;
+                const { type, topicName, payload, action, componentId: eventComponentId } = eventData;
+                
+                const eventMatch = dataEventName === eventName || 
+                                 topics.includes(dataEventName) || 
+                                 action === eventAction;
+                
+                if (eventMatch && ns.listeners.has(componentId)) {
+                    ns.listeners.get(componentId).callbackFn(eventData);
+                }
+            });
+        }
+        
+        // Raise event to parent
+        eventsNs.raiseEvent(eventName, eventCompileData);
+        console.groupEnd();
+    }
+
+    /**
+     * Load data from local API endpoint
+     */
+    ns.loadDataFromAPI = function() {
+        console.group(`simulation loadDataFromAPI on ${window.location}`);
+        
+        const apiBaseUrl = "http://localhost:8111";
+        const fullUrl = apiBaseUrl + ns.dataUrl;
+        
+        console.log("Loading data from API:", fullUrl);
+        
+        fetch(fullUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Data loaded from API:", data);
+                const $component = $(ns.selectorComponent);
+                if ($component.length) {
+                    ns.loadFromData($component, data);
+                } else {
+                    console.error("Component not found:", ns.selectorComponent);
+                }
+            })
+            .catch(error => {
+                console.error("Error loading data from API:", error);
+            })
+            .finally(() => {
+                console.groupEnd();
+            });
+    }
+
+    /**
+     * Reload data - supports both local and widget modes
+     */
+    ns.reload = function() {
+        console.group(`simulation reload on ${window.location}`);
+        
+        // Clear existing nodes, links, and labels (but keep SVG structure)
+        const $component = $(ns.selectorComponent);
+        if ($component.length) {
+            const svg = d3.select($component.get(0)).select("svg");
+            if (!svg.empty()) {
+                const g = svg.select("g");
+                if (!g.empty()) {
+                    // Remove only visualization elements, keep defs (arrowhead marker)
+                    g.selectAll(".links").remove();
+                    g.selectAll(".edgepath").remove();
+                    g.selectAll(".edgelabel").remove();
+                    g.selectAll(".nodes").remove();
+                }
+            }
+            
+            // Stop existing simulation
+            if (ns.simulation) {
+                ns.simulation.stop();
+            }
+        }
+        
+        // Reload data based on mode
+        if (ns.isLocalMode()) {
+            console.log("Reloading in local mode");
+            ns.loadDataFromAPI();
+        } else {
+            console.log("Reloading in widget mode");
+            ns.requestData();
+        }
+        
+        console.groupEnd();
     }
 
     ns.syntaxHighlight = function(json) {
@@ -211,31 +369,62 @@ window.Widgets.Simulation = {};
     ns.init = function($component) {
         console.group(`simulation init on ${window.location}`);
         
+        // Prevent multiple initializations
+        if ($component.data("simulation-initialized")) {
+            console.log("Simulation already initialized, skipping.");
+            console.groupEnd();
+            return;
+        }
+        $component.data("simulation-initialized", true);
+        
         console.log($component);
 
-        //init d3
-        ns.simulation = ns.forceSimulation($component.width(), $component.height());
+        // Get container dimensions
+        const width = $component.width() || ns.config.width;
+        const height = $component.height() || ns.config.height;
+
+        //init d3 force simulation
+        ns.simulation = ns.forceSimulation(width, height);
 
         let container = $component.get(0)
 
         //create svg
         let svg = d3.select(container)
             .append("svg")
-            .attr("width", $component.width())
-            .attr("height", $component.height())
+            .attr("width", width)
+            .attr("height", height)
             .append("g")
             .attr("transform", "translate(" + ns.config.margin.left + "," + ns.config.margin.top + ")");
 
-        //create tooltip to use later
-        ns.tooltip = window.Widgets.widjets.tooltip
+        //create tooltip - create new one if doesn't exist
+        if (!window.Widgets.Simulation.tooltip) {
+            ns.tooltip = d3.select("body")
+                .append("div")
+                .attr('class', 'tooltip')
+                .attr('id', 'simulation-tooltip')
+                .style('display', 'block')
+                .style("position", "absolute")
+                .style("z-index", "10")
+                .style("background-color", "white")
+                .style("border", "solid")
+                .style("border-width", "1px")
+                .style("border-color", "black")
+                .style("border-radius", "5px")
+                .style("padding", "5px")
+                .style("max-width", "900px")
+                .style("overflow-x", "auto")
+                .style('opacity', 0);
+        } else {
+            ns.tooltip = window.Widgets.Simulation.tooltip;
+        }
 
         console.log("ns.tooltip", ns.tooltip);
 
-        //create arrowhead
+        //create arrowhead marker
         let arrowhead = svg.append('defs').append('marker')
             .attr("id",'arrowhead')
-            .attr('viewBox','-0 -5 10 10') //the bound of the SVG viewport for the current SVG fragment. defines a coordinate system 10 wide and 10 high starting on (0,-5)
-            .attr('refX',ns.options.icon_size*1.25) // x coordinate for the reference point of the marker. If circle is bigger, this need to be bigger.
+            .attr('viewBox','-0 -5 10 10')
+            .attr('refX', ns.config.radius * 1.25) // Use config.radius instead of ns.options.icon_size
             .attr('refY',0)
             .attr('orient','auto')
             .attr('markerWidth',10)
@@ -254,17 +443,36 @@ window.Widgets.Simulation = {};
 
         zoom_handler(svg);
 
-        //load data
-        d3.json(ns.config.dataFile).then(function (data) {
-            console.group(`simulation init data loaded on ${window.location}`);
-            console.log(data);
-            ns.loadFromData($component, data);
-            console.groupEnd();
+        // Set up event listener for DATA_REFRESH
+        eventsNs.windowListener((eventData) => {
+            console.group(`simulation windowListener on ${window.location}`);
+            try {
+                const { type, payload, action, componentId, config } = eventData;
+                
+                if (action === "DATA_REFRESH") {
+                    console.log("DATA_REFRESH received, reloading data");
+                    ns.reload();
+                }
+            } catch (error) {
+                console.error("Error in simulation windowListener", error);
+            } finally {
+                console.groupEnd();
+            }
         });
+
+        // Load data based on mode
+        if (ns.isLocalMode()) {
+            console.log("Local mode detected, loading from API");
+            ns.loadDataFromAPI();
+        } else {
+            console.log("Widget mode detected, requesting data from parent");
+            ns.requestData();
+        }
+        
         console.groupEnd();
     }
 
-})(window.jQuery, window.Widgets.Simulation, window.d3, document, window);
+})(window.jQuery, window.Widgets.Simulation, window.d3, window.Widgets.Events, window.Widgets, document, window);
 
 (function($, ns, componentsNs, document, window) {
     

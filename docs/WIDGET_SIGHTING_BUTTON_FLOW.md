@@ -13,56 +13,56 @@ This document traces the **EXACT** function execution path when a user clicks th
 
 ```mermaid
 graph TD
-    A[User clicks "Sighting" radio button] --> B[panel.filter.js: filter.change event]
-    B --> C[panel.filter.js: filterChange function]
-    C --> D[panel.tree.js: updateTree function]
+    A["User clicks &quot;Sighting&quot; radio button"] --> B["panel.filter.js: filter.change event"]
+    B --> C["panel.filter.js: filterChange function"]
+    C --> D["panel.tree.js: updateTree function"]
     
-    D --> E{Check Widget Mode}
+    D --> E{"Check Widget Mode"}
     
-    E -->|Local Mode ?local=true| F[panel.tree.js: loadTreeDataFromAPI]
-    E -->|Widget Mode| G[panel.tree.js: loadTreeDataFromParent]
+    E -->|Local Mode ?local=true| F["panel.tree.js: loadTreeDataFromAPI"]
+    E -->|Widget Mode| G["panel.tree.js: loadTreeDataFromParent"]
     
     %% Local Mode Path
-    F --> F1[panel.tree.js: showLoadingState]
-    F1 --> F2[panel._utils.js: showNotification loading]
-    F2 --> F3[fetch API request to: https://flow.typerefinery.localhost:8101/viz-data/tree-sighting]
-    F3 --> F4{API Response}
-    F4 -->|Success| F5[panel.tree.js: loadData function]
-    F4 -->|Error| F6[panel.tree.js: showErrorMessage]
+    F --> F1["panel.tree.js: showLoadingState"]
+    F1 --> F2["panel._utils.js: showNotification loading"]
+    F2 --> F3["fetch API request to: https://flow.typerefinery.localhost:8101/viz-data/tree-sighting"]
+    F3 --> F4{"API Response"}
+    F4 -->|Success| F5["panel.tree.js: loadData function"]
+    F4 -->|Error| F6["panel.tree.js: showErrorMessage"]
     
     %% Widget Mode Path
-    G --> G1[panel._utils.js: showNotification loading]
-    G1 --> G2[widget.js: raiseEventDataRequest]
-    G2 --> G3[events.js: compileEventData]
-    G3 --> G4[events.js: raiseEvent]
-    G4 --> G5[window.parent.postMessage]
-    G5 --> G6[Workbench receives postMessage]
-    G6 --> G7[Workbench sends DATA_REFRESH response]
-    G7 --> G8[widget.js: windowListener callback]
-    G8 --> G9[panel.tree.js: loadData function]
+    G --> G1["panel._utils.js: showNotification loading"]
+    G1 --> G2["widget.js: raiseEventDataRequest"]
+    G2 --> G3["events.js: compileEventData"]
+    G3 --> G4["events.js: raiseEvent"]
+    G4 --> G5["window.parent.postMessage"]
+    G5 --> G6["Workbench receives postMessage"]
+    G6 --> G7["Workbench sends DATA_REFRESH response"]
+    G7 --> G8["widget.js: windowListener callback"]
+    G8 --> G9["panel.tree.js: loadData function"]
     
     %% Common Data Processing Path
-    F5 --> H[panel.tree.js: loadData function]
+    F5 --> H["panel.tree.js: loadData function"]
     G9 --> H
     
-    H --> I[Clear existing SVG content]
-    I --> J[Create new SVG root group]
-    J --> K[Create link lines group]
-    K --> L[Create nodes group]
-    L --> M[d3.hierarchy create tree structure]
-    M --> N[Process node hierarchy]
-    N --> O[panel.tree.js: drawTree function]
+    H --> I["Clear existing SVG content"]
+    I --> J["Create new SVG root group"]
+    J --> K["Create link lines group"]
+    K --> L["Create nodes group"]
+    L --> M["d3.hierarchy create tree structure"]
+    M --> N["Process node hierarchy"]
+    N --> O["panel.tree.js: drawTree function"]
     
-    O --> P[Create D3 tree layout]
-    P --> Q[Position nodes and links]
-    Q --> R[Create SVG elements for nodes]
-    R --> S[Create SVG elements for links]
-    S --> T[Apply transitions and animations]
-    T --> U[Final tree visualization rendered]
+    O --> P["Create D3 tree layout"]
+    P --> Q["Position nodes and links"]
+    Q --> R["Create SVG elements for nodes"]
+    R --> S["Create SVG elements for links"]
+    S --> T["Apply transitions and animations"]
+    T --> U["Final tree visualization rendered"]
     
     %% Error Handling
-    F6 --> V[panel._utils.js: showNotification error]
-    V --> W[Display error message in tree panel]
+    F6 --> V["panel._utils.js: showNotification error"]
+    V --> W["Display error message in tree panel"]
 ```
 
 ## Detailed Function Call Sequence
