@@ -143,8 +143,36 @@ window.Widgets.Widget = {};
     }
 
     /**
-     * Reload data - supports both local and widget modes
+     * Clear all visualization data without reloading
      */
+    ns.clearData = function() {
+        console.group(`widget clearData on ${window.location}`);
+        
+        // Clear existing nodes, links, and labels (but keep SVG structure)
+        const $component = $(ns.selectorComponent);
+        if ($component.length) {
+            const svg = d3.select($component.get(0)).select("svg");
+            if (!svg.empty()) {
+                const g = svg.select("g");
+                if (!g.empty()) {
+                    // Remove only visualization elements, keep defs (arrowhead marker)
+                    g.selectAll(".links").remove();
+                    g.selectAll(".edgepath").remove();
+                    g.selectAll(".edgelabel").remove();
+                    g.selectAll(".nodes").remove();
+                }
+            }
+            
+            // Stop existing simulation
+            if (ns.simulation) {
+                ns.simulation.stop();
+            }
+        }
+        
+        console.log("Data cleared");
+        console.groupEnd();
+    }
+
     ns.reload = function() {
         console.group(`widget reload on ${window.location}`);
         
@@ -436,7 +464,7 @@ window.Widgets.Widget = {};
 
         zoom_handler(svg);
 
-        // Set up event listener for DATA_REFRESH
+        // Set up event listener for DATA_REFRESH and CLEAR_DATA
         eventsNs.windowListener((eventData) => {
             console.group(`widget windowListener on ${window.location}`);
             try {
@@ -445,6 +473,9 @@ window.Widgets.Widget = {};
                 if (action === "DATA_REFRESH") {
                     console.log("DATA_REFRESH received, reloading data");
                     ns.reload();
+                } else if (action === "CLEAR_DATA") {
+                    console.log("CLEAR_DATA received, clearing visualization");
+                    ns.clearData();
                 }
             } catch (error) {
                 console.error("Error in widget windowListener", error);

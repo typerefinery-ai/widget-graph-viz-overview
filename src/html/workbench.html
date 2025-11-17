@@ -208,6 +208,7 @@
                 <div class="button-group">
                     <button class="btn success" onclick="requestOverviewData()">📊 Load Data</button>
                     <button class="btn" onclick="sendDataRefresh()">🔄 Send Data Refresh</button>
+                    <button class="btn danger" onclick="sendClearData()">🗑️ Clear Data</button>
                     <button class="btn" onclick="sendCustomMessage()">💬 Send Custom Message</button>
                     <button class="btn" onclick="simulateError()">❌ Simulate Error</button>
                     <button class="btn" onclick="simulateTimeout()">⏰ Simulate Timeout</button>
@@ -503,6 +504,21 @@
             };
             sendMessageToIframe(message);
             log('info', 'Sent DATA_REFRESH event to widget');
+        }
+
+        // Send clear data event
+        function sendClearData() {
+            const message = {
+                type: EVENT_NAME,
+                action: 'CLEAR_DATA',
+                payload: {
+                    action: 'clear_data',
+                    id: 'overview-default-incident'
+                },
+                componentId: `overview-default-incident-${EVENT_NAME}-clear_data`
+            };
+            sendMessageToIframe(message);
+            log('info', 'Sent CLEAR_DATA event to widget');
         }
 
         function sendCustomMessage() {
