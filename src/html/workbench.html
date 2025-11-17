@@ -206,7 +206,7 @@
             <div class="section">
                 <h3>📡 Communication</h3>
                 <div class="button-group">
-                    <button class="btn success" onclick="requestOverviewData()">📊 Load Overview Data</button>
+                    <button class="btn success" onclick="requestOverviewData()">📊 Load Data</button>
                     <button class="btn" onclick="sendDataRefresh()">🔄 Send Data Refresh</button>
                     <button class="btn" onclick="sendCustomMessage()">💬 Send Custom Message</button>
                     <button class="btn" onclick="simulateError()">❌ Simulate Error</button>
@@ -563,19 +563,20 @@
 
         // Reload Widget event
         function reloadWidget() {
-            // Reload the iframe and send a reload event after load
-            iframe.src = document.getElementById('iframeUrl').value;
-            iframe.onload = function() {
-                const reloadMessage = {
-                    type: EVENT_NAME,
-                    action: "DATA_REFRESH",
-                    payload: { message: "Workbench triggered widget reload" },
-                    target: "widget"
-                };
-                sendMessageToIframe(reloadMessage);
-                log('outgoing', 'Reload event sent to widget after reload');
-            };
-            log('info', 'Widget iframe reloaded');
+            log('info', 'Reloading widget iframe...');
+            // Reload the iframe - widget will automatically request data on init
+            const url = document.getElementById('iframeUrl').value;
+            iframe.src = '';
+            
+            // Wait a moment before setting new src to ensure clean reload
+            setTimeout(() => {
+                iframe.src = url;
+                log('info', `Widget iframe reloaded with URL: ${url}`);
+                log('info', 'Widget will automatically request data on initialization');
+                
+                // The widget will send DATA_REQUEST on init, and our message listener will respond
+                // No need to manually send data - just ensure we're ready to respond
+            }, 100);
         }
 
         // Keyboard shortcuts
