@@ -41,7 +41,7 @@ module.exports = merge(common, {
     liveReload: true,
     compress: false,
     hot: false,
-    port: process.env.PORT || 4005,
+    port: process.env.PORT || 4008,
     devMiddleware: {
         writeToDisk: true,
     }
