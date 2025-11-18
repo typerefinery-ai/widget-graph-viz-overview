@@ -174,59 +174,43 @@ window.Widgets.Widget = {};
         }
         
         let container = $component.get(0);
-        let svg = d3.select(container).select("svg");
+        let rootSvg = d3.select(container).select("svg");
         
-        if (svg.empty()) {
+        if (rootSvg.empty()) {
             console.warn("SVG not found in component");
             console.groupEnd();
             return;
         }
         
-        // Get the g element (the one with transform) - elements might be in root svg or in g
-        let g = svg.select("g");
+        // Get the g element (the one with transform) - this is where all visualization elements are
+        let g = rootSvg.select("g");
         
-        // Remove all visualization elements from both svg and g
-        // Remove links (line elements)
-        svg.selectAll(".links").remove();
-        svg.selectAll("line.links").remove();
-        if (!g.empty()) {
-            g.selectAll(".links").remove();
-            g.selectAll("line.links").remove();
+        if (g.empty()) {
+            console.warn("g element not found in SVG - structure may be broken");
+            console.groupEnd();
+            return;
         }
+        
+        // Remove all visualization elements from the g element
+        // Remove links (line elements)
+        g.selectAll(".links").remove();
+        g.selectAll("line.links").remove();
         
         // Remove edge paths (path elements)
-        svg.selectAll(".edgepath").remove();
-        svg.selectAll("path.edgepath").remove();
-        if (!g.empty()) {
-            g.selectAll(".edgepath").remove();
-            g.selectAll("path.edgepath").remove();
-        }
+        g.selectAll(".edgepath").remove();
+        g.selectAll("path.edgepath").remove();
         
         // Remove edge labels (text elements with textPath children)
-        svg.selectAll(".edgelabel").remove();
-        svg.selectAll("text.edgelabel").remove();
-        svg.selectAll("textPath").remove(); // Remove textPath elements too
-        if (!g.empty()) {
-            g.selectAll(".edgelabel").remove();
-            g.selectAll("text.edgelabel").remove();
-            g.selectAll("textPath").remove();
-        }
+        g.selectAll(".edgelabel").remove();
+        g.selectAll("text.edgelabel").remove();
+        g.selectAll("textPath").remove(); // Remove textPath elements too
         
         // Remove nodes (g element containing image elements)
-        svg.selectAll(".nodes").remove();
-        svg.selectAll("g.nodes").remove();
-        svg.selectAll("g.nodes image").remove(); // Also remove images directly
-        if (!g.empty()) {
-            g.selectAll(".nodes").remove();
-            g.selectAll("g.nodes").remove();
-            g.selectAll("g.nodes image").remove();
-        }
+        g.selectAll(".nodes").remove();
+        g.selectAll("g.nodes").remove();
         
-        // Clear any data bound to remaining elements
-        svg.selectAll("*").data([]);
-        if (!g.empty()) {
-            g.selectAll("*").data([]);
-        }
+        // Clear any data bound to remaining elements (but keep defs and g structure)
+        g.selectAll("line, path, text, g.nodes").data([]);
         
         // Hide tooltip if visible
         if (ns.tooltip) {
@@ -314,8 +298,10 @@ window.Widgets.Widget = {};
 
         let container = $component.get(0)
 
+        // Get the g element inside svg (the one with transform) - this is where elements are added
         let svg = d3.select(container)
             .select("svg")
+            .select("g")
 
         // Initialize the links
         let link = svg.selectAll(".links")
@@ -445,6 +431,14 @@ window.Widgets.Widget = {};
             .links(data.edges)
             .distance(function() {return 4 * ns.config.radius;});
 
+        // Restart the simulation if it was stopped (e.g., after clear)
+        if (ns.simulation.alpha() === 0) {
+            console.log("Restarting simulation after data load");
+            ns.simulation.alpha(1).restart();
+        } else {
+            // Ensure simulation is running
+            ns.simulation.restart();
+        }
         
         console.groupEnd();
     }
