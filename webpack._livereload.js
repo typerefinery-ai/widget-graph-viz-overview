@@ -57,7 +57,9 @@ class LiveReloadPlugin {
 
     validate(schema, options, {name: 'Livereload Plugin'});
 
-    this.defaultPort = 35729;
+    // Load dotenv to get LIVERELOAD_PORT
+    require('dotenv').config();
+    this.defaultPort = parseInt(process.env.LIVERELOAD_PORT) || 35729;
     this.options = Object.assign({
       protocol: '',
       port: this.defaultPort,

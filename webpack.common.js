@@ -3,14 +3,16 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const MergeIntoSingleFilePlugin = require('webpack-merge-and-include-globally');
 const fs = require('fs');
+require('dotenv').config();
 
 const paths = require('./webpack._paths')
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
+const livereloadPort = process.env.LIVERELOAD_PORT || 35731;
 
 const htmlBodyContent = fs.readFileSync(paths.src + '/html/content.html').toString();
 
-const htmlHeader = isDevelopment ? "<script src='http://localhost:35729/livereload.js'></script>" : "";
+const htmlHeader = isDevelopment ? `<script src='http://localhost:${livereloadPort}/livereload.js'></script>` : "";
 
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
@@ -168,7 +170,7 @@ module.exports = {
         ]
     }),
 
-    // auto reload the page using http://localhost:35729/livereload.js
+    // auto reload the page using livereload (port configurable via LIVERELOAD_PORT in .env)
     // new LiveReloadPlugin({}),
     isDevelopment && new WebpackFileWatcherLiveReload({
         watchFiles: [
