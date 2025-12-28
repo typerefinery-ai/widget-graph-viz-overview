@@ -22,9 +22,12 @@ window.Widgets.Widget = {};
             left: 30
         },
         width: 1200,
-        radius: 50,
+        radius: 35,  // Reduced to 70% of original (50) for better spacing
         height: 1000
     }
+
+    // Track selected node
+    ns.selectedNode = null;
 
     // Track listeners for event callbacks
     ns.listeners = new Map();
@@ -257,6 +260,26 @@ window.Widgets.Widget = {};
         console.groupEnd();
     }
 
+    /**
+     * Calculate the arrow head reference position based on node icon type
+     * @param {object} node - The target node
+     * @returns {number} - The refX value for the arrow head
+     */
+    ns.getArrowheadRefX = function(node) {
+        // Check if the icon is a rounded rectangle (different from circles)
+        const roundedRectIcons = ['identity', 'attack-pattern', 'campaign', 'course-of-action', 
+                                  'grouping', 'infrastructure', 'intrusion-set', 'malware', 
+                                  'threat-actor', 'tool', 'vulnerability'];
+        
+        if (node && node.icon && roundedRectIcons.includes(node.icon)) {
+            // For rounded rectangles, arrows should be closer (about 80% of circle)
+            return ns.config.radius * 1.0;
+        } else {
+            // For circular icons, use the standard radius
+            return ns.config.radius * 1.25;
+        }
+    }
+
     ns.syntaxHighlight = function(json) {
         if (typeof json != 'string') {
              json = JSON.stringify(json, undefined, 2);
@@ -288,8 +311,11 @@ window.Widgets.Widget = {};
             .force("link", d3.forceLink() // This force provides links between nodes
                             .id(d => d.id) // This sets the node id accessor to the specified function. If not specified, will default to the index of a node.
             ) 
-            .force("charge", d3.forceManyBody().strength(-500)) // This adds repulsion (if it's negative) between nodes. 
-            .force("center", d3.forceCenter(width / 2, height / 2)); // This force attracts nodes to the center of the svg area
+            .force("charge", d3.forceManyBody().strength(-500)) // This adds repulsion (if it's negative) between nodes.
+            .force("center", d3.forceCenter(width / 2, height / 2)) // This force attracts nodes to the center of the svg area
+            .force("collision", d3.forceCollide().radius(ns.config.radius * 1.5)) // Prevent node overlap with collision detection
+            .force("x", d3.forceX(width / 2).strength(0.05)) // Keep nodes within horizontal bounds
+            .force("y", d3.forceY(height / 2).strength(0.05)); // Keep nodes within vertical bounds
     }
 
     ns.loadFromData = function($component, data) {
@@ -329,8 +355,10 @@ window.Widgets.Widget = {};
             .style("pointer-events", "none")
             .attr('class', 'edgelabel')
             .attr('id', function (d, i) {return 'edgelabel' + i})
-            .attr('font-size', 18)
-            .attr('fill', '#aaa');
+            .attr('font-size', 12)
+            .attr('font-family', 'Arial, sans-serif')
+            .attr('font-weight', '500')
+            .attr('fill', '#666');
 
 
         edgelabels.append('textPath') //To render text along the shape of a <path>, enclose the text in a <textPath> element that has an href attribute with a reference to the <path> element.
@@ -338,7 +366,7 @@ window.Widgets.Widget = {};
             .style("text-anchor", "middle")
             .style("pointer-events", "none")
             .attr("startOffset", "50%")
-            .text(d => d.label);
+            .text(d => d.name);
 
         // Initialize the nodes
         // add hover over effect
@@ -348,24 +376,77 @@ window.Widgets.Widget = {};
             .data(data.nodes)
             .join("image")
             .attr("xlink:href",  function(d) { return (ns.config.prefix + ns.config.shape + d.icon + ".svg");})
-            .attr("width",  function(d) { return ns.config.radius + 5;})
-            .attr("height", function(d) { return ns.config.radius + 5;})
-            .on("mouseover", function(d){d3.select(this)
-                                        .transition()
-                                        .duration(350)
-                                        .attr("width",  70)
-                                        .attr("height", 70)
-                                    })
-            .on("mouseout", function(d){d3.select(this)
-                                        .transition()
-                                        .duration(350)
-                                        .attr("width",  function(d) { return ns.config.radius;})
-                                        .attr("height", function(d) { return ns.config.radius;})
-                                    })
-            .on('mouseover.tooltip', function(d) {
-                console.log("mouseover.tooltip ", d3.event);
-                var x = d.clientX; // $(this).attr("x");
-                var y = d.clientY; //$(this).attr("y");
+            .attr("width",  ns.config.radius)
+            .attr("height", ns.config.radius)
+            .attr("class", "node-image")
+            // .on("mouseover", function(d){
+            //     d3.select(this)
+            //         .transition()
+            //         .duration(350)
+            //         .attr("width",  ns.config.radius * 1.4)
+            //         .attr("height", ns.config.radius * 1.4)
+            // })
+            // .on("mouseout", function(d){
+            //     // Don't shrink if this is the selected node
+            //     const datum = d3.select(this).datum();
+            //     if (ns.selectedNode && ns.selectedNode.id === datum.id) {
+            //         return;
+            //     }
+            //     d3.select(this)
+            //         .transition()
+            //         .duration(350)
+            //         .attr("width",  ns.config.radius)
+            //         .attr("height", ns.config.radius)
+            // })
+            .on("click", function(event, d) {
+                event.stopPropagation();
+                const clickedNode = d3.select(this).datum();
+                
+                // Clear previous selection
+                svg.selectAll(".node-image")
+                    .style("filter", null)
+                    .style("stroke", null)
+                    .style("stroke-width", null);
+                
+                // If clicking the same node, deselect it
+                if (ns.selectedNode && ns.selectedNode.id === clickedNode.id) {
+                    ns.selectedNode = null;
+                    d3.select(this)
+                        .transition()
+                        .duration(200)
+                        .attr("width", ns.config.radius)
+                        .attr("height", ns.config.radius);
+                } else {
+                    // Select the new node
+                    ns.selectedNode = clickedNode;
+                    d3.select(this)
+                        .style("filter", "drop-shadow(0 0 8px rgba(0, 123, 255, 0.8))")
+                        .style("stroke", "#007bff")
+                        .style("stroke-width", "3px")
+                        .transition()
+                        .duration(200)
+                        .attr("width", ns.config.radius * 1.2)
+                        .attr("height", ns.config.radius * 1.2);
+                }
+                console.log("Node selected:", ns.selectedNode);
+            })
+            .on("dblclick", function(event, d) {
+                event.stopPropagation();
+                const datum = d3.select(this).datum();
+                
+                // Unfix the node on double-click
+                datum.fx = null;
+                datum.fy = null;
+                
+                // Restart simulation to allow the node to move
+                ns.simulation.alpha(0.3).restart();
+                
+                console.log("Node unfixed:", datum.id);
+            })
+            .on('mouseover.tooltip', function(event, d) {
+                console.log("mouseover.tooltip ", event);
+                var x = event.clientX;
+                var y = event.clientY;
                 
                 console.log("x ", x, " y ", y);
                 ns.tooltip.transition()
@@ -376,39 +457,41 @@ window.Widgets.Widget = {};
                     .style("top", (y + 10) + "px")
                     .style("opacity", .8);
                 })
-            .on("mouseout.tooltip", function() {
+            .on("mouseout.tooltip", function(event) {
                 console.log("mouseout.tooltip");
                 ns.tooltip.transition()
                     .duration(100)
                     .style("opacity", 0);
                 })
-            .on("mousemove", function(e) {
-                console.log("mousemove", e);
-                var x = e.clientX; // $(this).attr("x");
-                var y = e.clientY; //$(this).attr("y");
+            .on("mousemove", function(event, d) {
+                console.log("mousemove", event);
+                var x = event.clientX;
+                var y = event.clientY;
 
                 console.log("x ", x, " y ", y);
                 ns.tooltip.style("left", x + "px")
                     .style("top", (y + 10) + "px");
                 })
             .call(d3.drag()  //sets the event listener for the specified typenames and returns the drag behavior.
-                .on("start", function(d) {
-                    if (!d3.event.active) {
+                .on("start", function(event, d) {
+                    if (!event.active) {
                         ns.simulation.alphaTarget(0.3).restart();//sets the current target alpha to the specified number in the range [0,1].
                     }
                     d.fy = d.y; //fx - the node's fixed x-position. Original is null.
                     d.fx = d.x; //fy - the node's fixed y-position. Original is null.
                 }) //start - after a new pointer becomes active (on mousedown or touchstart).
-                .on("drag", function(d) {
-                    d.fx = d3.event.x;
-                    d.fy = d3.event.y;
+                .on("drag", function(event, d) {
+                    d.fx = event.x;
+                    d.fy = event.y;
                 })      //drag - after an active pointer moves (on mousemove or touchmove).
-                .on("end", function(d) {
-                    if (!d3.event.active) {
+                .on("end", function(event, d) {
+                    if (!event.active) {
                         ns.simulation.alphaTarget(0);
                     }
-                    d.fx = null;
-                    d.fy = null;
+                    // Keep nodes fixed in position after dragging
+                    // They can be unfixed by double-clicking
+                    // fx and fy remain set, keeping the node in place
+                    console.log("Node fixed at position:", d.id, d.fx, d.fy);
                 })     //end - after an active pointer becomes inactive (on mouseup, touchend or touchcancel).
             );
 
@@ -417,14 +500,28 @@ window.Widgets.Widget = {};
             .nodes(data.nodes) //sets the simulation's nodes to the specified array of objects, initializing their positions and velocities, and then re-initializes any bound forces;
             .on("tick", function() {
                 link.attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
 
                 node.attr("x", d => d.x - ns.config.radius/2)
                     .attr("y", d => d.y - ns.config.radius/2);
 
-                edgepaths.attr('d', d => 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y);
+                edgepaths.attr('d', d => {
+                    // Calculate angle for dynamic arrow positioning
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const angle = Math.atan2(dy, dx);
+                    
+                    // Get the appropriate offset for the target node shape
+                    const offset = ns.getArrowheadRefX(d.target) - ns.config.radius * 0.25;
+                    
+                    // Calculate the end point considering the node shape
+                    const targetX = d.target.x - offset * Math.cos(angle);
+                    const targetY = d.target.y - offset * Math.sin(angle);
+                    
+                    return 'M ' + d.source.x + ' ' + d.source.y + ' L ' + targetX + ' ' + targetY;
+                });
             })
 
         ns.simulation.force("link")
@@ -514,13 +611,33 @@ window.Widgets.Widget = {};
             .attr('fill', '#999')
             .style('stroke','none');
 
-        //create zoom handler 
+        //create zoom handler - apply to parent SVG, transform the g element
+        const parentSvg = d3.select(container).select("svg");
+        const initialTransform = `translate(${ns.config.margin.left},${ns.config.margin.top})`;
         var zoom_handler = d3.zoom()
-        .on("zoom", function(){
-            svg.attr("transform", d3.event.transform);
-        });
+            .scaleExtent([0.1, 10])  // Allow zoom from 10% to 1000%
+            .on("zoom", function(event){
+                // Combine zoom transform with initial margin translate
+                svg.attr("transform", `${initialTransform} ${event.transform}`);
+            });
 
-        zoom_handler(svg);
+        // Apply zoom to the parent SVG element, not the g element
+        zoom_handler(parentSvg);
+        
+        // Add click handler to SVG to deselect nodes when clicking on empty space
+        parentSvg.on("click", function() {
+            if (ns.selectedNode) {
+                ns.selectedNode = null;
+                svg.selectAll(".node-image")
+                    .style("filter", null)
+                    .style("stroke", null)
+                    .style("stroke-width", null)
+                    .transition()
+                    .duration(200)
+                    .attr("width", ns.config.radius)
+                    .attr("height", ns.config.radius);
+            }
+        });
 
         // Set up event listener for DATA_REFRESH and CLEAR_DATA
         eventsNs.windowListener((eventData) => {
