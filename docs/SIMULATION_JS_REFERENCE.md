@@ -32,7 +32,7 @@ ns.config = {
     shape: "rect-",
     margin: { top: 30, right: 80, bottom: 30, left: 30 },
     with: 1200,  // Note: typo - should be "width"
-    radius: 50,
+    iconSize: 50,
     height: 1000
 }
 ```
@@ -44,7 +44,7 @@ ns.config = {
 - **`shape`**: Icon shape prefix (`rect-`, `norm-`, `rnd-`)
 - **`margin`**: SVG margins (top, right, bottom, left)
 - **`with`**: ⚠️ Typo - should be `width` (SVG width)
-- **`radius`**: Default node radius
+- **`iconSize`**: Default node iconSize
 - **`height`**: SVG height
 
 ## Core Functions
@@ -89,7 +89,7 @@ Renders a force-directed graph from node/edge data.
 4. **Node Rendering**:
    - Creates `<image>` elements for each node
    - Icon source: `{prefix}{shape}{icon}.svg`
-   - Size: `radius + 5` (default 55px)
+   - Size: `iconSize + 5` (default 55px)
    - Hover effects: scales to 70px on mouseover
 
 5. **Interactions**:
@@ -98,7 +98,7 @@ Renders a force-directed graph from node/edge data.
    - **Simulation Tick**: Updates positions on each tick
 
 **Force Configuration**:
-- Link distance: `4 * radius` (200px default)
+- Link distance: `4 * iconSize` (200px default)
 - Drag behavior: Restarts simulation with alpha 0.3
 - Fixed positions: Nodes are fixed during drag (`fx`, `fy`)
 

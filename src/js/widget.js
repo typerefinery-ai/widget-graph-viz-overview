@@ -22,8 +22,55 @@ window.Widgets.Widget = {};
             left: 30
         },
         width: 1200,
-        radius: 35,  // Reduced to 70% of original (50) for better spacing
-        height: 1000
+        iconSize: 35,  // Reduced to 70% of original (50) for better spacing
+        height: 1000,
+        edgeFontSize: 12,
+        edgeFontFamily: 'Arial, sans-serif',
+        theme: {
+            treeFill: 'white',
+            scratchFill: 'blanchedalmond',
+            promoFill: 'ivory',
+            svgName: 'black',
+            svgBorder: 'black',
+            checkColour: 'gray',
+            checkText: 'white',
+            select: 'yellow',
+            edges: 'black',
+            tooltip: {
+                fill: 'white', 
+                stroke: '1px', 
+                scolour: 'black', 
+                corner: 5, 
+                tcolour: 'black', 
+                tsize: '11px', 
+                padding: '5px',
+                maxwidth: '900px',
+                overflow: 'auto'
+            },
+        },
+        // API Configuration for Local Mode
+        api: {
+            // Local mode loads from local files, production uses events only
+            // No baseUrl needed - local mode uses file:// URLs or relative paths
+            endpoints: {
+                graph: "/viz-data/overview-default-incident"
+            },
+            timeout: 10000, // 10 seconds
+            retryAttempts: 3
+        },
+        // Notification Configuration
+        notifications: {
+            enabled: true,
+            duration: 5000,
+            gravity: "top", // top, bottom
+            position: "right", // left, center, right
+            maxQueueSize: 10,
+            showLoadingStates: true,
+            showSuccessMessages: true,
+            showErrorMessages: true,
+            showWarningMessages: true,
+            showInfoMessages: true
+        }
     }
 
     // Track selected node
@@ -261,23 +308,47 @@ window.Widgets.Widget = {};
     }
 
     /**
-     * Calculate the arrow head reference position based on node icon type
-     * @param {object} node - The target node
-     * @returns {number} - The refX value for the arrow head
+     * Calculate the intersection point of a line from center to target with the node shape
+     * @param {number} angle - The angle in radians from source to target
+     * @param {number} iconSize - The iconSize of the node
+     * @param {string} shape - The shape type (rect-, norm-, rnd-)
+     * @returns {object} - Object with x and y offsets from center to edge
      */
-    ns.getArrowheadRefX = function(node) {
-        // Check if the icon is a rounded rectangle (different from circles)
-        const roundedRectIcons = ['identity', 'attack-pattern', 'campaign', 'course-of-action', 
-                                  'grouping', 'infrastructure', 'intrusion-set', 'malware', 
-                                  'threat-actor', 'tool', 'vulnerability'];
-        
-        if (node && node.icon && roundedRectIcons.includes(node.icon)) {
-            // For rounded rectangles, arrows should be closer (about 80% of circle)
-            return ns.config.radius * 1.0;
-        } else {
-            // For circular icons, use the standard radius
-            return ns.config.radius * 1.25;
+    ns.calculateShapeIntersection = function(angle, iconSize, shape) {
+        // For circular shapes (norm-, rnd-), use fixed iconSize
+        if (shape === "norm-" || shape === "rnd-") {
+            return {
+                x: iconSize * Math.cos(angle),
+                y: iconSize * Math.sin(angle)
+            };
         }
+        
+        // For rectangular shapes (rect-), calculate intersection with rectangle edges
+        // Rectangle has width and height = 2 * iconSize, centered at origin
+        const rectHalfWidth = iconSize;
+        const rectHalfHeight = iconSize;
+        
+        // Calculate potential intersection points
+        const dx = Math.cos(angle);
+        const dy = Math.sin(angle);
+        
+        // Avoid division by zero
+        const absDx = Math.abs(dx) < 0.0001 ? 0.0001 : Math.abs(dx);
+        const absDy = Math.abs(dy) < 0.0001 ? 0.0001 : Math.abs(dy);
+        
+        // Distance to vertical edge (left or right)
+        const tVertical = rectHalfWidth / absDx;
+        
+        // Distance to horizontal edge (top or bottom)
+        const tHorizontal = rectHalfHeight / absDy;
+        
+        // Use the smaller distance (closer intersection)
+        const t = Math.min(tVertical, tHorizontal);
+        
+        return {
+            x: t * dx,
+            y: t * dy
+        };
     }
 
     ns.syntaxHighlight = function(json) {
@@ -313,7 +384,7 @@ window.Widgets.Widget = {};
             ) 
             .force("charge", d3.forceManyBody().strength(-500)) // This adds repulsion (if it's negative) between nodes.
             .force("center", d3.forceCenter(width / 2, height / 2)) // This force attracts nodes to the center of the svg area
-            .force("collision", d3.forceCollide().radius(ns.config.radius * 1.5)) // Prevent node overlap with collision detection
+            .force("collision", d3.forceCollide().iconSize(ns.config.iconSize * 1.5)) // Prevent node overlap with collision detection
             .force("x", d3.forceX(width / 2).strength(0.05)) // Keep nodes within horizontal bounds
             .force("y", d3.forceY(height / 2).strength(0.05)); // Keep nodes within vertical bounds
     }
@@ -337,22 +408,26 @@ window.Widgets.Widget = {};
             .attr("source", (d) => d.source)
             .attr("target", (d) => d.target)
             .attr("stroke-width", 0.75)
-            .attr("stroke", "grey")
+            .attr("stroke", ns.options.theme.edges)
+            .style("pointer-events", "none")
+            .style("user-select", "none")
             .attr('marker-end','url(#arrowhead)'); //The marker-end attribute defines the arrowhead or polymarker that will be drawn at the final vertex of the given shape.
 
         let edgepaths = svg.selectAll(".edgepath") //make path go along with the link provide position for link labels
-                .data(data.edges)
-                .join('path')
-                .attr('class', 'edgepath')
-                .attr('fill-opacity', 0)
-                .attr('stroke-opacity', 0)
-                .attr('id', function (d, i) {return 'edgepath' + i})
-                .style("pointer-events", "none");
+            .data(data.edges)
+            .join('path')
+            .attr('class', 'edgepath')
+            .attr('fill-opacity', 0)
+            .attr('stroke-opacity', 0)
+            .attr('id', function (d, i) {return 'edgepath' + i})
+            .style("pointer-events", "none")
+            .style("user-select", "none");
 
         const edgelabels = svg.selectAll(".edgelabel")
             .data(data.edges)
             .join('text')
             .style("pointer-events", "none")
+            .style("user-select", "none")
             .attr('class', 'edgelabel')
             .attr('id', function (d, i) {return 'edgelabel' + i})
             .attr('font-size', 12)
@@ -365,7 +440,9 @@ window.Widgets.Widget = {};
             .attr('xlink:href', function (d, i) {return '#edgepath' + i})
             .style("text-anchor", "middle")
             .style("pointer-events", "none")
+            .style("user-select", "none")
             .attr("startOffset", "50%")
+            .attr("dy", -2)  // Lift text 2 pixels above the edge line
             .text(d => d.name);
 
         // Initialize the nodes
@@ -376,15 +453,15 @@ window.Widgets.Widget = {};
             .data(data.nodes)
             .join("image")
             .attr("xlink:href",  function(d) { return (ns.config.prefix + ns.config.shape + d.icon + ".svg");})
-            .attr("width",  ns.config.radius)
-            .attr("height", ns.config.radius)
+            .attr("width",  ns.config.iconSize)
+            .attr("height", ns.config.iconSize)
             .attr("class", "node-image")
             // .on("mouseover", function(d){
             //     d3.select(this)
             //         .transition()
             //         .duration(350)
-            //         .attr("width",  ns.config.radius * 1.4)
-            //         .attr("height", ns.config.radius * 1.4)
+            //         .attr("width",  ns.config.iconSize * 1.4)
+            //         .attr("height", ns.config.iconSize * 1.4)
             // })
             // .on("mouseout", function(d){
             //     // Don't shrink if this is the selected node
@@ -395,8 +472,8 @@ window.Widgets.Widget = {};
             //     d3.select(this)
             //         .transition()
             //         .duration(350)
-            //         .attr("width",  ns.config.radius)
-            //         .attr("height", ns.config.radius)
+            //         .attr("width",  ns.config.iconSize)
+            //         .attr("height", ns.config.iconSize)
             // })
             .on("click", function(event, d) {
                 event.stopPropagation();
@@ -414,8 +491,8 @@ window.Widgets.Widget = {};
                     d3.select(this)
                         .transition()
                         .duration(200)
-                        .attr("width", ns.config.radius)
-                        .attr("height", ns.config.radius);
+                        .attr("width", ns.config.iconSize)
+                        .attr("height", ns.config.iconSize);
                 } else {
                     // Select the new node
                     ns.selectedNode = clickedNode;
@@ -425,8 +502,8 @@ window.Widgets.Widget = {};
                         .style("stroke-width", "3px")
                         .transition()
                         .duration(200)
-                        .attr("width", ns.config.radius * 1.2)
-                        .attr("height", ns.config.radius * 1.2);
+                        .attr("width", ns.config.iconSize * 1.2)
+                        .attr("height", ns.config.iconSize * 1.2);
                 }
                 console.log("Node selected:", ns.selectedNode);
             })
@@ -504,21 +581,21 @@ window.Widgets.Widget = {};
                     .attr("x2", d => d.target.x)
                     .attr("y2", d => d.target.y);
 
-                node.attr("x", d => d.x - ns.config.radius/2)
-                    .attr("y", d => d.y - ns.config.radius/2);
+                node.attr("x", d => d.x - ns.config.iconSize/2)
+                    .attr("y", d => d.y - ns.config.iconSize/2);
 
                 edgepaths.attr('d', d => {
-                    // Calculate angle for dynamic arrow positioning
+                    // Calculate angle from source to target
                     const dx = d.target.x - d.source.x;
                     const dy = d.target.y - d.source.y;
                     const angle = Math.atan2(dy, dx);
                     
-                    // Get the appropriate offset for the target node shape
-                    const offset = ns.getArrowheadRefX(d.target) - ns.config.radius * 0.25;
+                    // Calculate intersection with target node shape
+                    const intersection = ns.calculateShapeIntersection(angle, ns.config.iconSize, ns.config.shape);
                     
-                    // Calculate the end point considering the node shape
-                    const targetX = d.target.x - offset * Math.cos(angle);
-                    const targetY = d.target.y - offset * Math.sin(angle);
+                    // Calculate the end point of the edge (at the target node's edge)
+                    const targetX = d.target.x - intersection.x;
+                    const targetY = d.target.y - intersection.y;
                     
                     return 'M ' + d.source.x + ' ' + d.source.y + ' L ' + targetX + ' ' + targetY;
                 });
@@ -526,7 +603,7 @@ window.Widgets.Widget = {};
 
         ns.simulation.force("link")
             .links(data.edges)
-            .distance(function() {return 4 * ns.config.radius;});
+            .distance(function() {return 4 * ns.config.iconSize;});
 
         // Restart the simulation if it was stopped (e.g., after clear)
         if (ns.simulation.alpha() === 0) {
@@ -584,7 +661,7 @@ window.Widgets.Widget = {};
                 .style("border", "solid")
                 .style("border-width", "1px")
                 .style("border-color", "black")
-                .style("border-radius", "5px")
+                .style("border-iconSize", "5px")
                 .style("padding", "5px")
                 .style("max-width", "900px")
                 .style("overflow-x", "auto")
@@ -600,7 +677,7 @@ window.Widgets.Widget = {};
         let arrowhead = svg.append('defs').append('marker')
             .attr("id",'arrowhead')
             .attr('viewBox','-0 -5 10 10')
-            .attr('refX', ns.config.radius * 1.25)
+            .attr('refX', ns.config.iconSize * 1.25)
             .attr('refY',0)
             .attr('orient','auto')
             .attr('markerWidth',10)
@@ -634,8 +711,8 @@ window.Widgets.Widget = {};
                     .style("stroke-width", null)
                     .transition()
                     .duration(200)
-                    .attr("width", ns.config.radius)
-                    .attr("height", ns.config.radius);
+                    .attr("width", ns.config.iconSize)
+                    .attr("height", ns.config.iconSize);
             }
         });
 

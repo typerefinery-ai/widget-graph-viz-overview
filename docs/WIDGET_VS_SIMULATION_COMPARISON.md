@@ -237,7 +237,7 @@ ns.config = {
     shape: "rect-",
     margin: { top: 30, right: 80, bottom: 30, left: 30 },
     with: 1200,  // ⚠️ Typo: should be "width"
-    radius: 50,
+    iconSize: 50,
     height: 1000
 }
 ```
