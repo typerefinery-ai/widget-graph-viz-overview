@@ -384,7 +384,7 @@ window.Widgets.Widget = {};
             ) 
             .force("charge", d3.forceManyBody().strength(-500)) // This adds repulsion (if it's negative) between nodes.
             .force("center", d3.forceCenter(width / 2, height / 2)) // This force attracts nodes to the center of the svg area
-            .force("collision", d3.forceCollide().iconSize(ns.config.iconSize * 1.5)) // Prevent node overlap with collision detection
+            .force("collision", d3.forceCollide().radius(ns.config.iconSize * 1.5)) // Prevent node overlap with collision detection
             .force("x", d3.forceX(width / 2).strength(0.05)) // Keep nodes within horizontal bounds
             .force("y", d3.forceY(height / 2).strength(0.05)); // Keep nodes within vertical bounds
     }
@@ -408,7 +408,7 @@ window.Widgets.Widget = {};
             .attr("source", (d) => d.source)
             .attr("target", (d) => d.target)
             .attr("stroke-width", 0.75)
-            .attr("stroke", ns.options.theme.edges)
+            .attr("stroke", ns.config.theme.edges)
             .style("pointer-events", "none")
             .style("user-select", "none")
             .attr('marker-end','url(#arrowhead)'); //The marker-end attribute defines the arrowhead or polymarker that will be drawn at the final vertex of the given shape.
