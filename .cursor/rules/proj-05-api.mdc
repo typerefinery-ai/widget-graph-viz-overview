@@ -344,7 +344,7 @@ function getCachedConfiguration() {
 ```javascript
 function validateOrigin(origin) {
     const allowedOrigins = [
-        "http://localhost:4001",
+        "http://localhost:4008",
         "https://yourdomain.com"
     ];
     

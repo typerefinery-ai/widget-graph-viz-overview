@@ -94,7 +94,7 @@ Use IIFE (Immediately Invoked Function Expression) pattern:
 
 ### 1. Start Development Server
 ```bash
-npm run start  # Runs on http://localhost:4001
+npm run start  # Runs on http://localhost:4008
 ```
 
 ### 2. Run E2E Tests

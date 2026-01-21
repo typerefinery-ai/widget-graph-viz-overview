@@ -69,7 +69,7 @@ cy.get('input').type('test', { force: true });
 ```javascript
 describe('Local Mode', () => {
     beforeEach(() => {
-        cy.visit('http://localhost:4001/?local=true');
+        cy.visit('http://localhost:4008/?local=true');
         cy.waitForWidgetReady();
     });
 
@@ -88,7 +88,7 @@ describe('Local Mode', () => {
 ```javascript
 describe('Widget Mode', () => {
     beforeEach(() => {
-        cy.visit('http://localhost:4001/');
+        cy.visit('http://localhost:4008/');
         cy.waitForWidgetReady();
     });
 
@@ -107,7 +107,7 @@ describe('Widget Mode', () => {
 ```javascript
 describe('User Interactions', () => {
     beforeEach(() => {
-        cy.visit('http://localhost:4001/?local=true');
+        cy.visit('http://localhost:4008/?local=true');
         cy.waitForWidgetReady();
     });
 
@@ -150,7 +150,7 @@ Cypress.Commands.add('dismissLoadingToasts', () => {
 // cypress.config.js
 module.exports = {
     e2e: {
-        baseUrl: "http://localhost:4001",
+        baseUrl: "http://localhost:4008",
         supportFile: "cypress/support/e2e.js",
         specPattern: "cypress/e2e/**/*.cy.js",
         video: true,
@@ -254,7 +254,7 @@ cy.window().then((win) => {
 - name: Run E2E Tests
   run: npm run test:e2e
   env:
-    CYPRESS_baseUrl: http://localhost:4001
+    CYPRESS_baseUrl: http://localhost:4008
 ```
 
 ### Test Reporting

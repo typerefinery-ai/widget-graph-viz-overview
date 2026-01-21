@@ -49,7 +49,7 @@ Run the development server:
 npm start
 ```
 
-You can view the development server at [http://localhost:4001](http://localhost:4001).
+You can view the development server at [http://localhost:4008](http://localhost:4008).
 
 ### Production build
 
@@ -214,7 +214,7 @@ A browser-based workbench is provided for simulating parent <-> iframe communica
 ### Usage
 
 1. Start the dev server: `npm start`
-2. Open [http://localhost:4001/src/html/workbench.html](http://localhost:4001/src/html/workbench.html) in your browser.
+2. Open [http://localhost:4008/src/html/workbench.html](http://localhost:4008/src/html/workbench.html) in your browser.
 3. Use the sidebar to send events/messages to the widget iframe.
 4. All messages sent/received are logged in the console area.
 5. You can reload the iframe, simulate errors, and test all widget/parent communication flows.

@@ -97,7 +97,7 @@ The **Workbench** is a comprehensive testing and development environment for the
 ### Starting the Workbench
 ```bash
 npm run start
-# Navigate to http://localhost:4001/workbench
+# Navigate to http://localhost:4008/workbench
 ```
 
 ### Manual Testing
@@ -234,7 +234,7 @@ The workbench is designed to work seamlessly with CI/CD pipelines:
 - name: Run Workbench Tests
   run: npm run test:e2e -- --spec "cypress/e2e/workbench.cy.js"
   env:
-    CYPRESS_baseUrl: http://localhost:4001
+    CYPRESS_baseUrl: http://localhost:4008
 ```
 
 This ensures that all widget functionality is thoroughly tested before deployment.

@@ -30,7 +30,7 @@ This is a widget-graph-viz project that creates a tree visualization widget that
 
 ### Build System
 - **Webpack Config**: [webpack.common.js](mdc:webpack.common.js) - Base webpack configuration
-- **Dev Server**: [webpack.dev.js](mdc:webpack.dev.js) - Development server config (port 4001)
+- **Dev Server**: [webpack.dev.js](mdc:webpack.dev.js) - Development server config (port 4008)
 - **Production**: [webpack.prod.js](mdc:webpack.prod.js) - Production build config
 
 ## Data Flow
@@ -59,7 +59,7 @@ This is a widget-graph-viz project that creates a tree visualization widget that
 
 ## Current Status
 - **E2E Tests**: 14/19 passing (74% success rate)
-- **Dev Server**: Running on port 4001
+- **Dev Server**: Running on port 4008
 - **Widget Mode**: Functional but some test failures
 - **Local Mode**: Fully functional
 - **Workbench**: Available for iframe communication testing

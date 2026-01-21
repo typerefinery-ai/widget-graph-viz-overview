@@ -16,8 +16,8 @@ describe('Workbench Communication - Force-Directed Graph', () => {
     cy.get('.workbench').should('be.visible');
     cy.get('#widgetFrame').should('be.visible');
     
-    // Wait for iframe to load the widget (port 4005)
-    cy.get('#widgetFrame').should('have.attr', 'src', 'http://localhost:4005/');
+    // Wait for iframe to load the widget (port 4008)
+    cy.get('#widgetFrame').should('have.attr', 'src', 'http://localhost:4008/');
     
     // Wait for iframe to load completely
     cy.wait(2000);
@@ -149,9 +149,9 @@ describe('Workbench Communication - Force-Directed Graph', () => {
     cy.get('input[value="/viz-data/overview-default-incident"]').should('exist');
   });
 
-  it('should use correct iframe URL (port 4005)', () => {
-    cy.get('#iframeUrl').should('have.value', 'http://localhost:4005/');
-    cy.get('#widgetFrame').should('have.attr', 'src', 'http://localhost:4005/');
+  it('should use correct iframe URL (port 4008)', () => {
+    cy.get('#iframeUrl').should('have.value', 'http://localhost:4008/');
+    cy.get('#widgetFrame').should('have.attr', 'src', 'http://localhost:4008/');
   });
 
   it('should simulate error and log it', () => {

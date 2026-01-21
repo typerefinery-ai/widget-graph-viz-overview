@@ -106,7 +106,7 @@ Current test status shows 35/40 tests passing (88%). There are 5 remaining test 
 ### Before Starting
 - [ ] Current test status: 35/40 passing
 - [ ] All working tests still pass
-- [ ] Dev server running on localhost:4001
+- [ ] Dev server running on localhost:4008
 - [ ] Local data files accessible
 
 ### After Complete Flow Fix

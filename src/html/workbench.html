@@ -241,7 +241,7 @@
                 <h3>⚙️ Settings</h3>
                 <div class="input-group">
                     <label for="iframeUrl">Iframe URL:</label>
-                    <input type="text" id="iframeUrl" value="http://localhost:4005/" placeholder="Enter iframe URL">
+                    <input type="text" id="iframeUrl" value="http://localhost:4008/" placeholder="Enter iframe URL">
                 </div>
                 <button class="btn" onclick="reloadIframe()">🔄 Reload Iframe</button>
             </div>
@@ -290,8 +290,8 @@
         function initWorkbench() {
             log('info', 'Workbench initialized');
             
-            // Set the iframe URL to load the widget (using port 4005)
-            const defaultUrl = 'http://localhost:4005/';
+            // Set the iframe URL to load the widget (using port 4008)
+            const defaultUrl = 'http://localhost:4008/';
             iframe.src = defaultUrl;
             document.getElementById('iframeUrl').value = defaultUrl;
             
