@@ -15,6 +15,7 @@ window.Widgets.Widget = {};
     ns.config = {
         prefix: "https://raw.githubusercontent.com/os-threat/images/main/img/",
         shape: "rect-", //norm-, rnd-,
+        showLayout: true,
         margin: {
             top: 30,
             right: 80,
@@ -324,9 +325,9 @@ window.Widgets.Widget = {};
         }
         
         // For rectangular shapes (rect-), calculate intersection with rectangle edges
-        // Rectangle has width and height = 2 * iconSize, centered at origin
-        const rectHalfWidth = iconSize;
-        const rectHalfHeight = iconSize;
+        // Rectangle has width and height =  iconSize, centered at origin
+        const rectHalfWidth = iconSize/2;
+        const rectHalfHeight = iconSize/2;
         
         // Calculate potential intersection points
         const dx = Math.cos(angle);
@@ -376,24 +377,50 @@ window.Widgets.Widget = {};
         });
     }
 
-    //create a simulation for an array of nodes, and compose the desired forces.
-    ns.forceSimulation = function(width, height) {
-        return d3.forceSimulation()
-            .force("link", d3.forceLink() // This force provides links between nodes
-                            .id(d => d.id) // This sets the node id accessor to the specified function. If not specified, will default to the index of a node.
-            ) 
-            .force("charge", d3.forceManyBody().strength(-500)) // This adds repulsion (if it's negative) between nodes.
-            .force("center", d3.forceCenter(width / 2, height / 2)) // This force attracts nodes to the center of the svg area
-            .force("collision", d3.forceCollide().radius(ns.config.iconSize * 1.5)) // Prevent node overlap with collision detection
-            .force("x", d3.forceX(width / 2).strength(0.05)) // Keep nodes within horizontal bounds
-            .force("y", d3.forceY(height / 2).strength(0.05)); // Keep nodes within vertical bounds
-    }
+    // //create a simulation for an array of nodes, and compose the desired forces.
+    // ns.forceSimulation = function(width, height) {
+    // //     return d3.forceSimulation()
+    // //         .force("link", d3.forceLink() // This force provides links between nodes
+    // //                         .id(d => d.id) // This sets the node id accessor to the specified function. If not specified, will default to the index of a node.
+    // //         ) 
+    // //         .force("charge", d3.forceManyBody().strength(-500)) // This adds repulsion (if it's negative) between nodes.
+    // //         .force("center", d3.forceCenter(width / 2, height / 2)) // This force attracts nodes to the center of the svg area
+    // //         .force("collision", d3.forceCollide().radius(ns.config.iconSize * 1.5)) // Prevent node overlap with collision detection
+    //         // .force("x", d3.forceX(width / 2).strength(0.05)) // Keep nodes within horizontal bounds
+    //         // .force("y", d3.forceY(height / 2).strength(0.05)); // Keep nodes within vertical bounds
+    // }
 
     ns.loadFromData = function($component, data) {
 
         console.group(`widget loadFromData on ${window.location}`);
 
         let container = $component.get(0)
+
+        // Get container dimensions
+        const width = $component.width() || ns.config.width;
+        const height = $component.height() || ns.config.height;
+
+        // Create a Set of valid node IDs for efficient lookup
+        const nodeIds = new Set(data.nodes.map(n => n.id));
+        
+        // Filter edges to only include those with valid source and target nodes
+        const validEdges = data.edges.filter(edge => {
+            const isValid = nodeIds.has(edge.source) && nodeIds.has(edge.target);
+            if (!isValid) {
+                console.warn(`Skipping edge with missing node - source: ${edge.source}, target: ${edge.target}`);
+            }
+            return isValid;
+        });
+        
+        console.log(`Filtered edges: ${data.edges.length} total, ${validEdges.length} valid, ${data.edges.length - validEdges.length} invalid`);
+
+        //init d3 force simulation
+        ns.simulation = d3
+            .forceSimulation(data.nodes)
+            .force("link", d3.forceLink() // This force provides links between nodes
+                .id(d => d.id) // This sets the node id accessor to the specified function. If not specified, will default to the index of a node.
+                // .distance(500 * ns.options.iconSize)
+            );
 
         // Get the g element inside svg (the one with transform) - this is where elements are added
         let svg = d3.select(container)
@@ -402,7 +429,7 @@ window.Widgets.Widget = {};
 
         // Initialize the links
         let link = svg.selectAll(".links")
-            .data(data.edges)
+            .data(validEdges)
             .join("line")
             .attr("class", "links")
             .attr("source", (d) => d.source)
@@ -414,7 +441,7 @@ window.Widgets.Widget = {};
             .attr('marker-end','url(#arrowhead)'); //The marker-end attribute defines the arrowhead or polymarker that will be drawn at the final vertex of the given shape.
 
         let edgepaths = svg.selectAll(".edgepath") //make path go along with the link provide position for link labels
-            .data(data.edges)
+            .data(validEdges)
             .join('path')
             .attr('class', 'edgepath')
             .attr('fill-opacity', 0)
@@ -424,7 +451,7 @@ window.Widgets.Widget = {};
             .style("user-select", "none");
 
         const edgelabels = svg.selectAll(".edgelabel")
-            .data(data.edges)
+            .data(validEdges)
             .join('text')
             .style("pointer-events", "none")
             .style("user-select", "none")
@@ -601,10 +628,50 @@ window.Widgets.Widget = {};
                 });
             })
 
-        ns.simulation.force("link")
-            .links(data.edges)
-            .distance(function() {return 4 * ns.config.iconSize;});
+        // Setup either the Layout, or Default Force Graph
+        if (ns.config.showLayout) {
+            
+            ns.simulation 
+                .force("link")
+                .links(validEdges)
+                .id(d => d.id)
+                .distance(function() {return 4 * ns.config.iconSize;})
+                .strength(0.05);
 
+            ns.simulation 
+                .force('x', d3.forceX().x(function(d) {
+                    return d.positionX;
+                }).strength(function(d) {
+                    // ignore forceX where the positionX is 0 (i.e., not set)
+                    if (d.positionX === 0) {
+                        return 0;
+                    } else {
+                        return 1;
+                    }
+                }))
+                .force('y', d3.forceY().y(function(d) {
+                    return d.positionY;
+                }).strength(1))
+                // .force('collision', d3.forceCollide().radius(function(d) {
+                //     console.log("d is ->", d)
+                //     return d.radius;
+                // }))
+                .force("collide", d3.forceCollide(ns.config.iconSize))
+                // .force("charge", d3.forceManyBody().strength(-200)) // This adds repulsion (if it's negative) between nodes. 
+                .force("charge", d3.forceManyBody().strength(-500)) // This adds repulsion (if it's negative) between nodes. 
+                // .force("center", d3.forceCenter(ns.config.width / 2, ns.config.height / 2)); // This force attracts nodes to the center of the svg area
+        } else {
+            ns.simulation 
+                .force("link")
+                .links(validEdges)
+                .id(d => d.id)
+                .distance(function() {return 4 * ns.config.iconSize;});
+            ns.simulation
+                .force("charge", d3.forceManyBody().strength(-500)) // This adds repulsion (if it's negative) between nodes. 
+                .force("center", d3.forceCenter(ns.config.width / 2, ns.config.height / 2)); // This force attracts nodes to the center of the svg area
+        }
+
+          
         // Restart the simulation if it was stopped (e.g., after clear)
         if (ns.simulation.alpha() === 0) {
             console.log("Restarting simulation after data load");
@@ -634,9 +701,6 @@ window.Widgets.Widget = {};
         // Get container dimensions
         const width = $component.width() || ns.config.width;
         const height = $component.height() || ns.config.height;
-
-        //init d3 force simulation
-        ns.simulation = ns.forceSimulation(width, height);
 
         let container = $component.get(0)
 

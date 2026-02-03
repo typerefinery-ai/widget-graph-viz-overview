@@ -1,0 +1,1304 @@
+{
+    "nodes": [
+        {
+            "id": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "type": "incident",
+            "icon": "incident-ext",
+            "name": "potential phishing",
+            "heading": "Extended-Incident",
+            "description": "Name -> potential phishing",
+            "object_form": "incident",
+            "object_group": "sdo-forms",
+            "object_family": "os-threat-forms",
+            "original": {
+                "type": "incident",
+                "spec_version": "2.1",
+                "id": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+                "created": "2025-12-23T11:51:25.476Z",
+                "modified": "2025-12-23T11:51:25.476Z",
+                "name": "potential phishing",
+                "extensions": {
+                    "extension-definition--ef765651-680c-498d-9894-99799f2fa126": {
+                        "extension_type": "property-extension",
+                        "investigation_status": "new",
+                        "incident_types": [
+                            "dissemination-phishing-emails"
+                        ],
+                        "other_object_refs": [
+                            "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212",
+                            "email-addr--4722424c-7012-56b0-84d5-01d076fc547b",
+                            "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b",
+                            "identity--466b1e51-6cbd-443f-9980-0741dc10644a",
+                            "identity--d565842e-be68-44e2-87b6-c4278ad34b29",
+                            "url--3279c7de-8f91-5c1a-99d9-d6546c6c41f7",
+                            "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d",
+                            "relationship--375beba4-fa5b-4081-aaa9-3a656f4f91c3",
+                            "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22",
+                            "indicator--06730816-f9fa-43d5-bdbb-8c9fb44593af",
+                            "sighting--ec3ccb41-1994-420c-84ba-cebdd846136a",
+                            "identity--57268468-cd4a-480c-a884-dbeb14094e48",
+                            "identity--e4f222c1-6aaf-41f2-a854-b3ac35765cea",
+                            "identity--267ca3c7-6796-4e4f-a51f-7dfd3cc7e79b",
+                            "anecdote--e1298bc0-818e-5cdb-9154-eac37c8e260f",
+                            "observed-data--a44672f2-0226-4b2a-a270-56fa312ca5c2",
+                            "sighting--f38db457-c543-4e5f-96b0-785693d08f6a"
+                        ],
+                        "event_refs": [
+                            "event--96e36ea9-a898-4a83-a4e4-18d80ee23f11"
+                        ],
+                        "sequence_refs": [
+                            "sequence--103c7d06-b940-445f-a91e-cf04a4df921a",
+                            "sequence--b67ef3f4-3bdf-46ae-87b6-cee325151f6f",
+                            "sequence--9357aebe-2f37-4d95-b68d-9dc60fd8eca3"
+                        ],
+                        "task_refs": [
+                            "task--a8ded3ad-09ef-479a-9f36-b69be8758fed",
+                            "task--2efce62b-0902-449e-9fa5-1da1ad0a91f7"
+                        ],
+                        "impact_refs": [
+                            "impact--41c78868-6734-4c14-9066-cae6687219f2"
+                        ],
+                        "sequence_start_refs": [
+                            "sequence--44a28220-1f1b-4b24-9361-193fc13c44b4",
+                            "sequence--d285e173-2680-4944-9088-306257b68394"
+                        ]
+                    }
+                }
+            },
+            "references": {
+                "other_object_refs": [
+                    "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212",
+                    "email-addr--4722424c-7012-56b0-84d5-01d076fc547b",
+                    "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b",
+                    "identity--466b1e51-6cbd-443f-9980-0741dc10644a",
+                    "identity--d565842e-be68-44e2-87b6-c4278ad34b29",
+                    "url--3279c7de-8f91-5c1a-99d9-d6546c6c41f7",
+                    "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d",
+                    "relationship--375beba4-fa5b-4081-aaa9-3a656f4f91c3",
+                    "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22",
+                    "indicator--06730816-f9fa-43d5-bdbb-8c9fb44593af",
+                    "sighting--ec3ccb41-1994-420c-84ba-cebdd846136a",
+                    "identity--57268468-cd4a-480c-a884-dbeb14094e48",
+                    "identity--e4f222c1-6aaf-41f2-a854-b3ac35765cea",
+                    "identity--267ca3c7-6796-4e4f-a51f-7dfd3cc7e79b",
+                    "anecdote--e1298bc0-818e-5cdb-9154-eac37c8e260f",
+                    "observed-data--a44672f2-0226-4b2a-a270-56fa312ca5c2",
+                    "sighting--f38db457-c543-4e5f-96b0-785693d08f6a"
+                ],
+                "event_refs": [
+                    "event--96e36ea9-a898-4a83-a4e4-18d80ee23f11"
+                ],
+                "sequence_refs": [
+                    "sequence--103c7d06-b940-445f-a91e-cf04a4df921a",
+                    "sequence--b67ef3f4-3bdf-46ae-87b6-cee325151f6f",
+                    "sequence--9357aebe-2f37-4d95-b68d-9dc60fd8eca3"
+                ],
+                "task_refs": [
+                    "task--a8ded3ad-09ef-479a-9f36-b69be8758fed",
+                    "task--2efce62b-0902-449e-9fa5-1da1ad0a91f7"
+                ],
+                "impact_refs": [
+                    "impact--41c78868-6734-4c14-9066-cae6687219f2"
+                ]
+            },
+            "positionX": 20,
+            "positionY": 20
+        },
+        {
+            "id": "impact--41c78868-6734-4c14-9066-cae6687219f2",
+            "type": "impact",
+            "icon": "impact-availability",
+            "name": "",
+            "heading": "Impact-Availability",
+            "description": "Impact ->99<br>Description ->Laptop is stuffed",
+            "object_form": "impact",
+            "object_group": "sdo-forms",
+            "object_family": "os-threat-forms",
+            "original": {
+                "type": "impact",
+                "spec_version": "2.1",
+                "id": "impact--41c78868-6734-4c14-9066-cae6687219f2",
+                "created": "2025-12-23T11:51:35.656Z",
+                "modified": "2025-12-23T11:51:35.656Z",
+                "impact_category": "availability",
+                "criticality": 99,
+                "description": "Laptop is stuffed",
+                "end_time": "2025-12-23T11:51:35.656Z",
+                "impacted_entity_counts": {
+                    "computers-mobile": 1
+                },
+                "impacted_refs": [
+                    "identity--e062ba4b-eac6-4e2f-82f8-8907de29f156"
+                ],
+                "recoverability": "regular",
+                "start_time": "2025-12-23T11:51:35.656Z",
+                "extensions": {
+                    "availability": {
+                        "availability_impact": 99
+                    },
+                    "extension-definition--7cc33dd6-f6a1-489b-98ea-522d351d71b9": {
+                        "extension_type": "new-sdo"
+                    }
+                }
+            },
+            "references": {
+                "impacted_refs": [
+                    "identity--e062ba4b-eac6-4e2f-82f8-8907de29f156"
+                ]
+            },
+            "positionX": 270,
+            "positionY": 350
+        },
+        {
+            "id": "sequence--103c7d06-b940-445f-a91e-cf04a4df921a",
+            "type": "sequence",
+            "icon": "step-single",
+            "name": "event",
+            "heading": "Step-Single",
+            "description": "For -> event<br>Type -> single_step",
+            "object_form": "sequence",
+            "object_group": "sdo-forms",
+            "object_family": "os-threat-forms",
+            "original": {
+                "type": "sequence",
+                "spec_version": "2.1",
+                "id": "sequence--103c7d06-b940-445f-a91e-cf04a4df921a",
+                "created": "2025-12-23T11:51:26.951Z",
+                "modified": "2025-12-23T11:51:26.951Z",
+                "sequenced_object": "event--96e36ea9-a898-4a83-a4e4-18d80ee23f11",
+                "sequence_type": "event",
+                "step_type": "single_step",
+                "extensions": {
+                    "extension-definition--be0c7c79-1961-43db-afde-637066a87a64": {
+                        "extension_type": "new-sdo"
+                    }
+                }
+            },
+            "references": {
+                "sequenced_object": [
+                    "event--96e36ea9-a898-4a83-a4e4-18d80ee23f11"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 900
+        },
+        {
+            "id": "event--96e36ea9-a898-4a83-a4e4-18d80ee23f11",
+            "type": "event",
+            "icon": "event",
+            "name": "Potential Phishing Email",
+            "heading": "Event",
+            "description": "Name -> Potential Phishing Email<br>Description ->Suspicious email reported by user",
+            "object_form": "event",
+            "object_group": "sdo-forms",
+            "object_family": "oca-forms",
+            "original": {
+                "type": "event",
+                "spec_version": "2.1",
+                "id": "event--96e36ea9-a898-4a83-a4e4-18d80ee23f11",
+                "created": "2025-12-23T11:51:26.438Z",
+                "modified": "2025-12-23T11:51:26.438Z",
+                "description": "Suspicious email reported by user",
+                "end_time": "2025-12-23T11:51:26.438Z",
+                "event_types": [
+                    "dissemination-phishing-emails"
+                ],
+                "name": "Potential Phishing Email",
+                "start_time": "2025-12-23T11:51:26.438Z",
+                "extensions": {
+                    "extension-definition--4ca6de00-5b0d-45ef-a1dc-ea7279ea910e": {
+                        "extension_type": "new-sdo"
+                    }
+                }
+            },
+            "references": {},
+            "positionX": 270,
+            "positionY": 600
+        },
+        {
+            "id": "sequence--44a28220-1f1b-4b24-9361-193fc13c44b4",
+            "type": "sequence",
+            "icon": "step-terminal",
+            "name": "event",
+            "heading": "Step-Terminal",
+            "description": "For -> event<br>Type -> start_step",
+            "object_form": "sequence",
+            "object_group": "sdo-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "sequence",
+                "spec_version": "2.1",
+                "id": "sequence--44a28220-1f1b-4b24-9361-193fc13c44b4",
+                "created": "2025-12-23T11:51:26.995Z",
+                "modified": "2025-12-23T11:51:26.995Z",
+                "sequence_type": "event",
+                "step_type": "start_step",
+                "next_steps": [
+                    "sequence--103c7d06-b940-445f-a91e-cf04a4df921a"
+                ]
+            },
+            "references": {
+                "next_steps": [
+                    "sequence--103c7d06-b940-445f-a91e-cf04a4df921a"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 900
+        },
+        {
+            "id": "task--a8ded3ad-09ef-479a-9f36-b69be8758fed",
+            "type": "task",
+            "icon": "task",
+            "name": "",
+            "heading": "Task",
+            "description": "Description ->Suspicious email reported by user",
+            "object_form": "task",
+            "object_group": "sdo-forms",
+            "object_family": "attack-forms",
+            "original": {
+                "type": "task",
+                "spec_version": "2.1",
+                "id": "task--a8ded3ad-09ef-479a-9f36-b69be8758fed",
+                "created": "2025-12-23T11:51:27.112Z",
+                "modified": "2025-12-23T11:51:27.112Z",
+                "description": "Suspicious email reported by user",
+                "end_time": "2025-12-23T11:51:27.112Z",
+                "name": "Potential Phishing Email",
+                "start_time": "2025-12-23T11:51:27.112Z",
+                "extensions": {
+                    "extension-definition--2074a052-8be4-4932-849e-f5e7798e0030": {
+                        "extension_type": "new-sdo"
+                    }
+                }
+            },
+            "references": {},
+            "positionX": 270,
+            "positionY": 100
+        },
+        {
+            "id": "sequence--b67ef3f4-3bdf-46ae-87b6-cee325151f6f",
+            "type": "sequence",
+            "icon": "step-single",
+            "name": "task",
+            "heading": "Step-Single",
+            "description": "For -> task<br>Type -> single_step",
+            "object_form": "sequence",
+            "object_group": "sdo-forms",
+            "object_family": "os-threat-forms",
+            "original": {
+                "type": "sequence",
+                "spec_version": "2.1",
+                "id": "sequence--b67ef3f4-3bdf-46ae-87b6-cee325151f6f",
+                "created": "2025-12-23T11:51:27.275Z",
+                "modified": "2025-12-23T11:51:27.275Z",
+                "sequenced_object": "task--a8ded3ad-09ef-479a-9f36-b69be8758fed",
+                "sequence_type": "task",
+                "step_type": "single_step",
+                "extensions": {
+                    "extension-definition--be0c7c79-1961-43db-afde-637066a87a64": {
+                        "extension_type": "new-sdo"
+                    }
+                },
+                "next_steps": [
+                    "sequence--9357aebe-2f37-4d95-b68d-9dc60fd8eca3"
+                ]
+            },
+            "references": {
+                "sequenced_object": [
+                    "task--a8ded3ad-09ef-479a-9f36-b69be8758fed"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 400
+        },
+        {
+            "id": "sequence--d285e173-2680-4944-9088-306257b68394",
+            "type": "sequence",
+            "icon": "step-terminal",
+            "name": "task",
+            "heading": "Step-Terminal",
+            "description": "For -> task<br>Type -> start_step",
+            "object_form": "sequence",
+            "object_group": "sdo-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "sequence",
+                "spec_version": "2.1",
+                "id": "sequence--d285e173-2680-4944-9088-306257b68394",
+                "created": "2025-12-23T11:51:27.363Z",
+                "modified": "2025-12-23T11:51:27.363Z",
+                "sequence_type": "task",
+                "step_type": "start_step",
+                "next_steps": [
+                    "sequence--b67ef3f4-3bdf-46ae-87b6-cee325151f6f"
+                ]
+            },
+            "references": {
+                "next_steps": [
+                    "sequence--b67ef3f4-3bdf-46ae-87b6-cee325151f6f"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 400
+        },
+        {
+            "id": "task--2efce62b-0902-449e-9fa5-1da1ad0a91f7",
+            "type": "task",
+            "icon": "task",
+            "name": "",
+            "heading": "Task",
+            "description": "Description ->Find out who else got the email",
+            "object_form": "task",
+            "object_group": "sdo-forms",
+            "object_family": "attack-forms",
+            "original": {
+                "type": "task",
+                "spec_version": "2.1",
+                "id": "task--2efce62b-0902-449e-9fa5-1da1ad0a91f7",
+                "created": "2025-12-23T11:51:35.774Z",
+                "modified": "2025-12-23T11:51:35.774Z",
+                "description": "Find out who else got the email",
+                "end_time": "2025-12-23T11:51:35.774Z",
+                "name": "Query Exchange Server",
+                "start_time": "2025-12-23T11:51:35.774Z",
+                "extensions": {
+                    "extension-definition--2074a052-8be4-4932-849e-f5e7798e0030": {
+                        "extension_type": "new-sdo"
+                    }
+                }
+            },
+            "references": {},
+            "positionX": 670,
+            "positionY": 100
+        },
+        {
+            "id": "sequence--9357aebe-2f37-4d95-b68d-9dc60fd8eca3",
+            "type": "sequence",
+            "icon": "step-single",
+            "name": "task",
+            "heading": "Step-Single",
+            "description": "For -> task<br>Type -> single_step",
+            "object_form": "sequence",
+            "object_group": "sdo-forms",
+            "object_family": "os-threat-forms",
+            "original": {
+                "type": "sequence",
+                "spec_version": "2.1",
+                "id": "sequence--9357aebe-2f37-4d95-b68d-9dc60fd8eca3",
+                "created": "2025-12-23T11:51:35.962Z",
+                "modified": "2025-12-23T11:51:35.962Z",
+                "sequenced_object": "task--2efce62b-0902-449e-9fa5-1da1ad0a91f7",
+                "sequence_type": "task",
+                "step_type": "single_step",
+                "extensions": {
+                    "extension-definition--be0c7c79-1961-43db-afde-637066a87a64": {
+                        "extension_type": "new-sdo"
+                    }
+                }
+            },
+            "references": {
+                "sequenced_object": [
+                    "task--2efce62b-0902-449e-9fa5-1da1ad0a91f7"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 400
+        },
+        {
+            "id": "url--3279c7de-8f91-5c1a-99d9-d6546c6c41f7",
+            "type": "url",
+            "icon": "url",
+            "name": "https://www.northkorea.nk/we/are/mad/",
+            "heading": "URL",
+            "description": "Value -> https://www.northkorea.nk/we/are/mad/",
+            "object_form": "url",
+            "object_group": "sco-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "url",
+                "spec_version": "2.1",
+                "id": "url--3279c7de-8f91-5c1a-99d9-d6546c6c41f7",
+                "value": "https://www.northkorea.nk/we/are/mad/"
+            },
+            "references": {},
+            "positionX": 0,
+            "positionY": 1150
+        },
+        {
+            "id": "identity--57268468-cd4a-480c-a884-dbeb14094e48",
+            "type": "identity",
+            "icon": "identity-ext",
+            "name": "",
+            "heading": "Extended-Identity",
+            "description": "Name -> Naive Smith<br>Description ->A Naive Individual",
+            "object_form": "identity",
+            "object_group": "sdo-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "identity",
+                "spec_version": "2.1",
+                "id": "identity--57268468-cd4a-480c-a884-dbeb14094e48",
+                "created": "2025-12-03T00:10:45.184Z",
+                "modified": "2025-12-03T00:10:45.184Z",
+                "name": "Naive Smith",
+                "description": "A Naive Individual",
+                "roles": [
+                    "user",
+                    "sales"
+                ],
+                "identity_class": "individual",
+                "sectors": [
+                    "technology"
+                ],
+                "extensions": {
+                    "extension-definition--66e2492a-bbd3-4be6-88f5-cc91a017a498": {
+                        "extension_type": "property-extension",
+                        "contact_numbers": [
+                            {
+                                "contact_number_type": "work-phone",
+                                "contact_number": "0499-999-109"
+                            }
+                        ],
+                        "email_addresses": [
+                            {
+                                "digital_contact_type": "work",
+                                "email_address_ref": "email-addr--4722424c-7012-56b0-84d5-01d076fc547b"
+                            }
+                        ],
+                        "first_name": "Naive",
+                        "last_name": "Smith",
+                        "middle_name": "Weakling",
+                        "prefix": "Mr",
+                        "social_media_accounts": [
+                            {
+                                "digital_contact_type": "work",
+                                "user_account_ref": "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b"
+                            }
+                        ],
+                        "team": "Sales"
+                    }
+                }
+            },
+            "references": {
+                "email_address_ref": [
+                    "email-addr--4722424c-7012-56b0-84d5-01d076fc547b"
+                ],
+                "user_account_ref": [
+                    "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 1150
+        },
+        {
+            "id": "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b",
+            "type": "user-account",
+            "icon": "user-account",
+            "name": "79563902",
+            "heading": "User-Account",
+            "description": "ID -> 79563902<br>Display Name -> Naive Smith<br>Type -> sales,",
+            "object_form": "user-account",
+            "object_group": "sco-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "user-account",
+                "spec_version": "2.1",
+                "id": "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b",
+                "user_id": "79563902",
+                "account_login": "nsmith",
+                "account_type": "sales,",
+                "display_name": "Naive Smith"
+            },
+            "references": {},
+            "positionX": 0,
+            "positionY": 1150
+        },
+        {
+            "id": "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22",
+            "type": "observed-data",
+            "icon": "observed-data",
+            "name": "2020-10-19T01:01:01.000Z",
+            "heading": "Observed-Data",
+            "description": "First Seen -> 2020-10-19T01:01:01.000Z<br>Last Seen -> 2020-10-19T01:01:01.000Z",
+            "object_form": "observed-data",
+            "object_group": "sdo-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "observed-data",
+                "spec_version": "2.1",
+                "id": "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22",
+                "created": "2025-12-23T11:51:26.136Z",
+                "modified": "2025-12-23T11:51:26.136Z",
+                "first_observed": "2020-10-19T01:01:01.000Z",
+                "last_observed": "2020-10-19T01:01:01.000Z",
+                "number_observed": 1,
+                "object_refs": [
+                    "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212",
+                    "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b",
+                    "email-addr--4722424c-7012-56b0-84d5-01d076fc547b",
+                    "url--3279c7de-8f91-5c1a-99d9-d6546c6c41f7",
+                    "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d",
+                    "relationship--375beba4-fa5b-4081-aaa9-3a656f4f91c3"
+                ]
+            },
+            "references": {
+                "object_refs": [
+                    "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212",
+                    "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b",
+                    "email-addr--4722424c-7012-56b0-84d5-01d076fc547b",
+                    "url--3279c7de-8f91-5c1a-99d9-d6546c6c41f7",
+                    "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d",
+                    "relationship--375beba4-fa5b-4081-aaa9-3a656f4f91c3"
+                ]
+            },
+            "positionY": 1000,
+            "positionX": 270
+        },
+        {
+            "id": "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212",
+            "type": "email-addr",
+            "icon": "email-addr",
+            "name": "evil@northkorea.nk",
+            "heading": "Email-Addr",
+            "description": "Value -> evil@northkorea.nk<br>Display Name -> Bad Man",
+            "object_form": "email-addr",
+            "object_group": "sco-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "email-addr",
+                "spec_version": "2.1",
+                "id": "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212",
+                "value": "evil@northkorea.nk",
+                "display_name": "Bad Man"
+            },
+            "references": {},
+            "positionX": 0,
+            "positionY": 1150
+        },
+        {
+            "id": "relationship--375beba4-fa5b-4081-aaa9-3a656f4f91c3",
+            "type": "relationship",
+            "icon": "relationship",
+            "name": "derived-from",
+            "heading": "Relationship",
+            "description": "Type -> derived-from<br>Source -> email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d<br>Target -> url--3279c7de-8f91-5c1a-99d9-d6546c6c41f7",
+            "object_form": "relationship",
+            "object_group": "sro-forms",
+            "object_family": "attack-forms",
+            "original": {
+                "type": "relationship",
+                "spec_version": "2.1",
+                "id": "relationship--375beba4-fa5b-4081-aaa9-3a656f4f91c3",
+                "created": "2025-12-23T11:51:26.20Z",
+                "modified": "2025-12-23T11:51:26.20Z",
+                "relationship_type": "derived-from",
+                "source_ref": "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d",
+                "target_ref": "url--3279c7de-8f91-5c1a-99d9-d6546c6c41f7"
+            },
+            "references": {
+                "source_ref": [
+                    "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d"
+                ],
+                "target_ref": [
+                    "url--3279c7de-8f91-5c1a-99d9-d6546c6c41f7"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 1300
+        },
+        {
+            "id": "indicator--06730816-f9fa-43d5-bdbb-8c9fb44593af",
+            "type": "indicator",
+            "icon": "indicator",
+            "name": "Potential Phishing Email",
+            "heading": "Indicator",
+            "description": "Name -> Potential Phishing Email<br>Description ->Suspicious email reported by user",
+            "object_form": "indicator",
+            "object_group": "sdo-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "indicator",
+                "spec_version": "2.1",
+                "id": "indicator--06730816-f9fa-43d5-bdbb-8c9fb44593af",
+                "created": "2025-12-23T11:51:26.246Z",
+                "modified": "2025-12-23T11:51:26.246Z",
+                "name": "Potential Phishing Email",
+                "description": "Suspicious email reported by user",
+                "indicator_types": [
+                    "unknown"
+                ],
+                "pattern": "[email-addr:value = 'evil@northkorea.nk' AND email:subject = 'we are coming for you']",
+                "pattern_type": "stix",
+                "pattern_version": "2.1",
+                "valid_from": "2025-12-23T11:51:26.246Z"
+            },
+            "references": {},
+            "positionY": 1000,
+            "positionX": 70
+        },
+        {
+            "id": "observed-data--a44672f2-0226-4b2a-a270-56fa312ca5c2",
+            "type": "observed-data",
+            "icon": "observed-data",
+            "name": "2020-10-19T01:01:01.000Z",
+            "heading": "Observed-Data",
+            "description": "First Seen -> 2020-10-19T01:01:01.000Z<br>Last Seen -> 2020-10-19T01:01:01.000Z",
+            "object_form": "observed-data",
+            "object_group": "sdo-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "observed-data",
+                "spec_version": "2.1",
+                "id": "observed-data--a44672f2-0226-4b2a-a270-56fa312ca5c2",
+                "created": "2025-12-23T11:51:34.892Z",
+                "modified": "2025-12-23T11:51:34.892Z",
+                "first_observed": "2020-10-19T01:01:01.000Z",
+                "last_observed": "2020-10-19T01:01:01.000Z",
+                "number_observed": 1,
+                "object_refs": [
+                    "anecdote--e1298bc0-818e-5cdb-9154-eac37c8e260f"
+                ]
+            },
+            "references": {
+                "object_refs": [
+                    "anecdote--e1298bc0-818e-5cdb-9154-eac37c8e260f"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 1150
+        },
+        {
+            "id": "email-addr--4722424c-7012-56b0-84d5-01d076fc547b",
+            "type": "email-addr",
+            "icon": "email-addr",
+            "name": "naive@example.com",
+            "heading": "Email-Addr",
+            "description": "Value -> naive@example.com<br>Display Name -> Naive Smith<br>Belongs to -> user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b",
+            "object_form": "email-addr",
+            "object_group": "sco-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "email-addr",
+                "spec_version": "2.1",
+                "id": "email-addr--4722424c-7012-56b0-84d5-01d076fc547b",
+                "value": "naive@example.com",
+                "display_name": "Naive Smith",
+                "belongs_to_ref": "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b"
+            },
+            "references": {
+                "belongs_to_ref": [
+                    "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 1150
+        },
+        {
+            "id": "identity--466b1e51-6cbd-443f-9980-0741dc10644a",
+            "type": "identity",
+            "icon": "identity-ext",
+            "name": "",
+            "heading": "Extended-Identity",
+            "description": "Name -> Naive Smith<br>Description ->A Naive Individual",
+            "object_form": "identity",
+            "object_group": "sdo-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "identity",
+                "spec_version": "2.1",
+                "id": "identity--466b1e51-6cbd-443f-9980-0741dc10644a",
+                "created": "2025-12-23T11:50:02.54Z",
+                "modified": "2025-12-23T11:50:02.54Z",
+                "name": "Naive Smith",
+                "description": "A Naive Individual",
+                "roles": [
+                    "user",
+                    "sales"
+                ],
+                "identity_class": "individual",
+                "sectors": [
+                    "technology"
+                ],
+                "extensions": {
+                    "extension-definition--66e2492a-bbd3-4be6-88f5-cc91a017a498": {
+                        "extension_type": "property-extension",
+                        "contact_numbers": [
+                            {
+                                "contact_number_type": "work-phone",
+                                "contact_number": "0499-999-109"
+                            }
+                        ],
+                        "email_addresses": [
+                            {
+                                "digital_contact_type": "work",
+                                "email_address_ref": "email-addr--4722424c-7012-56b0-84d5-01d076fc547b"
+                            }
+                        ],
+                        "first_name": "Naive",
+                        "last_name": "Smith",
+                        "middle_name": "Weakling",
+                        "prefix": "Mr",
+                        "social_media_accounts": [
+                            {
+                                "digital_contact_type": "work",
+                                "user_account_ref": "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b"
+                            }
+                        ],
+                        "team": "Sales"
+                    }
+                }
+            },
+            "references": {
+                "email_address_ref": [
+                    "email-addr--4722424c-7012-56b0-84d5-01d076fc547b"
+                ],
+                "user_account_ref": [
+                    "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b"
+                ]
+            },
+            "positionY": 1000,
+            "positionX": 470
+        },
+        {
+            "id": "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d",
+            "type": "email-message",
+            "icon": "email-message",
+            "name": "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212",
+            "heading": "Email-Message",
+            "description": "From -> email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212<br>Subjectwe are coming for you<br>Body -> some bad stuff written here",
+            "object_form": "email-message",
+            "object_group": "sco-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "email-message",
+                "spec_version": "2.1",
+                "id": "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d",
+                "is_multipart": false,
+                "date": "2020-10-19T01:01:01.000Z",
+                "from_ref": "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212",
+                "to_refs": [
+                    "email-addr--4722424c-7012-56b0-84d5-01d076fc547b"
+                ],
+                "subject": "we are coming for you",
+                "body": "some bad stuff written here"
+            },
+            "references": {
+                "from_ref": [
+                    "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212"
+                ],
+                "to_refs": [
+                    "email-addr--4722424c-7012-56b0-84d5-01d076fc547b"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 1150
+        },
+        {
+            "id": "anecdote--e1298bc0-818e-5cdb-9154-eac37c8e260f",
+            "type": "anecdote",
+            "icon": "anecdote",
+            "name": "2025-12-23T11:51:34.791299Z",
+            "heading": "Anecdote",
+            "description": "Report Date -> 2025-12-23T11:51:34.791299Z<br>Statement -> I clicked on the link, and my laptop screen went weird",
+            "object_form": "anecdote",
+            "object_group": "sco-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "anecdote",
+                "spec_version": "2.1",
+                "id": "anecdote--e1298bc0-818e-5cdb-9154-eac37c8e260f",
+                "value": "I clicked on the link, and my laptop screen went weird",
+                "report_date": "2025-12-23T11:51:34.791299Z",
+                "provided_by_ref": "identity--466b1e51-6cbd-443f-9980-0741dc10644a"
+            },
+            "references": {
+                "provided_by_ref": [
+                    "identity--466b1e51-6cbd-443f-9980-0741dc10644a"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 1150
+        },
+        {
+            "id": "identity--d565842e-be68-44e2-87b6-c4278ad34b29",
+            "type": "identity",
+            "icon": "identity-ext",
+            "name": "",
+            "heading": "Extended-Identity",
+            "description": "Name -> Trusty Jones<br>Description ->A Trusty Individual",
+            "object_form": "identity",
+            "object_group": "sdo-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "identity",
+                "spec_version": "2.1",
+                "id": "identity--d565842e-be68-44e2-87b6-c4278ad34b29",
+                "created": "2025-12-23T11:50:00.740Z",
+                "modified": "2025-12-23T11:50:00.740Z",
+                "name": "Trusty Jones",
+                "description": "A Trusty Individual",
+                "roles": [
+                    "soc",
+                    "support"
+                ],
+                "identity_class": "individual",
+                "sectors": [
+                    "technology"
+                ],
+                "extensions": {
+                    "extension-definition--66e2492a-bbd3-4be6-88f5-cc91a017a498": {
+                        "extension_type": "property-extension",
+                        "contact_numbers": [
+                            {
+                                "contact_number_type": "work-phone",
+                                "contact_number": "0418-208-368"
+                            }
+                        ],
+                        "email_addresses": [
+                            {
+                                "digital_contact_type": "work",
+                                "email_address_ref": "email-addr--c99b87bd-f0a8-50ca-9f84-68072efc61e3"
+                            }
+                        ],
+                        "first_name": "Me",
+                        "last_name": "Jones",
+                        "middle_name": "Percival",
+                        "prefix": "Dr",
+                        "social_media_accounts": [
+                            {
+                                "digital_contact_type": "work",
+                                "user_account_ref": "user-account--83658594-537d-5c32-b9f0-137354bd9bc3"
+                            }
+                        ],
+                        "team": "os-threat"
+                    }
+                }
+            },
+            "references": {
+                "email_address_ref": [
+                    "email-addr--c99b87bd-f0a8-50ca-9f84-68072efc61e3"
+                ],
+                "user_account_ref": [
+                    "user-account--83658594-537d-5c32-b9f0-137354bd9bc3"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 1150
+        },
+        {
+            "id": "sighting--ec3ccb41-1994-420c-84ba-cebdd846136a",
+            "type": "sighting",
+            "icon": "sighting-alert",
+            "name": "",
+            "heading": "Sighting-Alert",
+            "description": "Name -> User Report<br>Description ->I have found a suspicious email",
+            "object_form": "sighting",
+            "object_group": "sro-forms",
+            "object_family": "stix-forms",
+            "original": {
+                "type": "sighting",
+                "spec_version": "2.1",
+                "id": "sighting--ec3ccb41-1994-420c-84ba-cebdd846136a",
+                "created": "2025-12-23T11:51:26.336Z",
+                "modified": "2025-12-23T11:51:26.336Z",
+                "description": "I have found a suspicious email",
+                "count": 1,
+                "sighting_of_ref": "indicator--06730816-f9fa-43d5-bdbb-8c9fb44593af",
+                "observed_data_refs": [
+                    "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22"
+                ],
+                "where_sighted_refs": [
+                    "identity--466b1e51-6cbd-443f-9980-0741dc10644a"
+                ],
+                "extensions": {
+                    "sighting-alert": {
+                        "name": "User Report",
+                        "log": "I have found a suspicious email",
+                        "system_id": "XYZ-1234",
+                        "source": "user submission"
+                    },
+                    "extension-definition--0d76d6d9-16ca-43fd-bd41-4f800ba8fc43": {
+                        "extension_type": "property-extension"
+                    }
+                }
+            },
+            "references": {
+                "sighting_of_ref": [
+                    "indicator--06730816-f9fa-43d5-bdbb-8c9fb44593af"
+                ],
+                "observed_data_refs": [
+                    "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22"
+                ],
+                "where_sighted_refs": [
+                    "identity--466b1e51-6cbd-443f-9980-0741dc10644a"
+                ]
+            },
+            "positionX": 270,
+            "positionY": 850
+        },
+        {
+            "id": "sighting--f38db457-c543-4e5f-96b0-785693d08f6a",
+            "type": "sighting",
+            "icon": "sighting-anecdote",
+            "name": "",
+            "heading": "Sighting-Anecdote",
+            "description": "Person  -> Naive User<br>Description ->Interview with Naive User",
+            "object_form": "sighting",
+            "object_group": "sro-forms",
+            "object_family": "os-threat-forms",
+            "original": {
+                "type": "sighting",
+                "spec_version": "2.1",
+                "id": "sighting--f38db457-c543-4e5f-96b0-785693d08f6a",
+                "created": "2025-12-23T11:51:35.23Z",
+                "modified": "2025-12-23T11:51:35.23Z",
+                "description": "Interview with Naive User",
+                "count": 1,
+                "sighting_of_ref": "identity--466b1e51-6cbd-443f-9980-0741dc10644a",
+                "observed_data_refs": [
+                    "observed-data--a44672f2-0226-4b2a-a270-56fa312ca5c2"
+                ],
+                "where_sighted_refs": [
+                    "identity--d565842e-be68-44e2-87b6-c4278ad34b29"
+                ],
+                "extensions": {
+                    "sighting-anecdote": {
+                        "person_name": "Naive User",
+                        "person_context": "employee",
+                        "report_submission": "interview"
+                    },
+                    "extension-definition--0d76d6d9-16ca-43fd-bd41-4f800ba8fc43": {
+                        "extension_type": "property-extension"
+                    }
+                }
+            },
+            "references": {
+                "sighting_of_ref": [
+                    "identity--466b1e51-6cbd-443f-9980-0741dc10644a"
+                ],
+                "observed_data_refs": [
+                    "observed-data--a44672f2-0226-4b2a-a270-56fa312ca5c2"
+                ],
+                "where_sighted_refs": [
+                    "identity--d565842e-be68-44e2-87b6-c4278ad34b29"
+                ]
+            },
+            "positionX": 0,
+            "positionY": 1150
+        }
+    ],
+    "edges": [
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "email-addr--4722424c-7012-56b0-84d5-01d076fc547b",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "identity--466b1e51-6cbd-443f-9980-0741dc10644a",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "identity--d565842e-be68-44e2-87b6-c4278ad34b29",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "url--3279c7de-8f91-5c1a-99d9-d6546c6c41f7",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "relationship--375beba4-fa5b-4081-aaa9-3a656f4f91c3",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "indicator--06730816-f9fa-43d5-bdbb-8c9fb44593af",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "sighting--ec3ccb41-1994-420c-84ba-cebdd846136a",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "identity--57268468-cd4a-480c-a884-dbeb14094e48",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "identity--e4f222c1-6aaf-41f2-a854-b3ac35765cea",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "identity--267ca3c7-6796-4e4f-a51f-7dfd3cc7e79b",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "anecdote--e1298bc0-818e-5cdb-9154-eac37c8e260f",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "observed-data--a44672f2-0226-4b2a-a270-56fa312ca5c2",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "sighting--f38db457-c543-4e5f-96b0-785693d08f6a",
+            "name": "other-object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "event--96e36ea9-a898-4a83-a4e4-18d80ee23f11",
+            "name": "event-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "sequence--103c7d06-b940-445f-a91e-cf04a4df921a",
+            "name": "sequence-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "sequence--b67ef3f4-3bdf-46ae-87b6-cee325151f6f",
+            "name": "sequence-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "sequence--9357aebe-2f37-4d95-b68d-9dc60fd8eca3",
+            "name": "sequence-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "task--a8ded3ad-09ef-479a-9f36-b69be8758fed",
+            "name": "task-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "task--2efce62b-0902-449e-9fa5-1da1ad0a91f7",
+            "name": "task-refs",
+            "type": "edge"
+        },
+        {
+            "source": "incident--e26f5f82-b457-45f6-ba7a-8245fe66d4f6",
+            "target": "impact--41c78868-6734-4c14-9066-cae6687219f2",
+            "name": "impact-refs",
+            "type": "edge"
+        },
+        {
+            "source": "sequence--44a28220-1f1b-4b24-9361-193fc13c44b4",
+            "target": "sequence--103c7d06-b940-445f-a91e-cf04a4df921a",
+            "name": "next-steps",
+            "type": "edge"
+        },
+        {
+            "source": "sequence--d285e173-2680-4944-9088-306257b68394",
+            "target": "sequence--b67ef3f4-3bdf-46ae-87b6-cee325151f6f",
+            "name": "next-steps",
+            "type": "edge"
+        },
+        {
+            "source": "sequence--103c7d06-b940-445f-a91e-cf04a4df921a",
+            "target": "event--96e36ea9-a898-4a83-a4e4-18d80ee23f11",
+            "name": "sequenced-object",
+            "type": "edge"
+        },
+        {
+            "source": "sequence--b67ef3f4-3bdf-46ae-87b6-cee325151f6f",
+            "target": "task--a8ded3ad-09ef-479a-9f36-b69be8758fed",
+            "name": "sequenced-object",
+            "type": "edge"
+        },
+        {
+            "source": "sequence--9357aebe-2f37-4d95-b68d-9dc60fd8eca3",
+            "target": "task--2efce62b-0902-449e-9fa5-1da1ad0a91f7",
+            "name": "sequenced-object",
+            "type": "edge"
+        },
+        {
+            "source": "email-addr--4722424c-7012-56b0-84d5-01d076fc547b",
+            "target": "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b",
+            "name": "belongs-to-ref",
+            "type": "edge"
+        },
+        {
+            "source": "identity--466b1e51-6cbd-443f-9980-0741dc10644a",
+            "target": "email-addr--4722424c-7012-56b0-84d5-01d076fc547b",
+            "name": "email-address-ref",
+            "type": "edge"
+        },
+        {
+            "source": "identity--466b1e51-6cbd-443f-9980-0741dc10644a",
+            "target": "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b",
+            "name": "user-account-ref",
+            "type": "edge"
+        },
+        {
+            "source": "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d",
+            "target": "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212",
+            "name": "from-ref",
+            "type": "edge"
+        },
+        {
+            "source": "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d",
+            "target": "email-addr--4722424c-7012-56b0-84d5-01d076fc547b",
+            "name": "to-refs",
+            "type": "edge"
+        },
+        {
+            "source": "relationship--375beba4-fa5b-4081-aaa9-3a656f4f91c3",
+            "target": "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d",
+            "name": "derived-from",
+            "type": "relationship"
+        },
+        {
+            "source": "relationship--375beba4-fa5b-4081-aaa9-3a656f4f91c3",
+            "target": "url--3279c7de-8f91-5c1a-99d9-d6546c6c41f7",
+            "name": "derived-from",
+            "type": "relationship"
+        },
+        {
+            "source": "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22",
+            "target": "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212",
+            "name": "object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22",
+            "target": "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b",
+            "name": "object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22",
+            "target": "email-addr--4722424c-7012-56b0-84d5-01d076fc547b",
+            "name": "object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22",
+            "target": "url--3279c7de-8f91-5c1a-99d9-d6546c6c41f7",
+            "name": "object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22",
+            "target": "email-message--6090e3d4-1fa8-5b36-9d2d-4a66d824995d",
+            "name": "object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22",
+            "target": "relationship--375beba4-fa5b-4081-aaa9-3a656f4f91c3",
+            "name": "object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "sighting--ec3ccb41-1994-420c-84ba-cebdd846136a",
+            "target": "indicator--06730816-f9fa-43d5-bdbb-8c9fb44593af",
+            "name": "sighting-of-ref",
+            "type": "edge"
+        },
+        {
+            "source": "sighting--ec3ccb41-1994-420c-84ba-cebdd846136a",
+            "target": "observed-data--e5af6840-6dbd-4869-b62d-931dc64d8e22",
+            "name": "observed-data-refs",
+            "type": "edge"
+        },
+        {
+            "source": "sighting--ec3ccb41-1994-420c-84ba-cebdd846136a",
+            "target": "identity--466b1e51-6cbd-443f-9980-0741dc10644a",
+            "name": "where-sighted-refs",
+            "type": "edge"
+        },
+        {
+            "source": "identity--57268468-cd4a-480c-a884-dbeb14094e48",
+            "target": "email-addr--4722424c-7012-56b0-84d5-01d076fc547b",
+            "name": "email-address-ref",
+            "type": "edge"
+        },
+        {
+            "source": "identity--57268468-cd4a-480c-a884-dbeb14094e48",
+            "target": "user-account--597ad4d4-35ba-585d-8f6d-134a75032f9b",
+            "name": "user-account-ref",
+            "type": "edge"
+        },
+        {
+            "source": "anecdote--e1298bc0-818e-5cdb-9154-eac37c8e260f",
+            "target": "identity--466b1e51-6cbd-443f-9980-0741dc10644a",
+            "name": "provided-by-ref",
+            "type": "edge"
+        },
+        {
+            "source": "observed-data--a44672f2-0226-4b2a-a270-56fa312ca5c2",
+            "target": "anecdote--e1298bc0-818e-5cdb-9154-eac37c8e260f",
+            "name": "object-refs",
+            "type": "edge"
+        },
+        {
+            "source": "sighting--f38db457-c543-4e5f-96b0-785693d08f6a",
+            "target": "identity--466b1e51-6cbd-443f-9980-0741dc10644a",
+            "name": "sighting-of-ref",
+            "type": "edge"
+        },
+        {
+            "source": "sighting--f38db457-c543-4e5f-96b0-785693d08f6a",
+            "target": "observed-data--a44672f2-0226-4b2a-a270-56fa312ca5c2",
+            "name": "observed-data-refs",
+            "type": "edge"
+        },
+        {
+            "source": "sighting--f38db457-c543-4e5f-96b0-785693d08f6a",
+            "target": "identity--d565842e-be68-44e2-87b6-c4278ad34b29",
+            "name": "where-sighted-refs",
+            "type": "edge"
+        }
+    ]
+}
