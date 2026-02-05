@@ -15,7 +15,7 @@ window.Widgets.Widget = {};
     ns.config = {
         prefix: "https://raw.githubusercontent.com/os-threat/images/main/img/",
         shape: "rect-", //norm-, rnd-,
-        showLayout: true,
+        showLayout: false,
         margin: {
             top: 30,
             right: 80,
