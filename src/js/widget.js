@@ -534,15 +534,43 @@ window.Widgets.Widget = {};
 
         console.group(`widget loadFromData on ${window.location}`);
 
+        // Idempotent render: every call appended a fresh <g class="nodes"> (and edge paths with
+        // id-based labels) without removing the previous generation, so a second data load
+        // doubled every node on screen (alpha-launch docs/issues/0024). Tear down first.
+        if (d3.select($component.get(0)).select("svg g .nodes").size() > 0) {
+            console.log("loadFromData: clearing previous render before re-render");
+            ns.clearData();
+        }
+
         let container = $component.get(0)
 
         // Get container dimensions
         const width = $component.width() || ns.config.width;
         const height = $component.height() || ns.config.height;
 
+        // Dedupe nodes by id before anything binds to them. Upstream payloads can carry the
+        // same STIX id twice (incident + its extension row - alpha-launch docs/issues/0024);
+        // with a keyed join the duplicate becomes a phantom element that renders but ignores
+        // renderPositions() and interactions. Keep the first occurrence, log what was dropped.
+        {
+            const seenIds = new Set();
+            const uniqueNodes = data.nodes.filter(n => {
+                if (seenIds.has(n.id)) {
+                    console.warn(`Dropping duplicate node id from payload: ${n.id}`);
+                    return false;
+                }
+                seenIds.add(n.id);
+                return true;
+            });
+            if (uniqueNodes.length !== data.nodes.length) {
+                console.warn(`Node dedupe: ${data.nodes.length} -> ${uniqueNodes.length}`);
+            }
+            data.nodes = uniqueNodes;
+        }
+
         // Create a Set of valid node IDs for efficient lookup
         const nodeIds = new Set(data.nodes.map(n => n.id));
-        
+
         // Filter edges to only include those with valid source and target nodes
         const validEdges = data.edges.filter(edge => {
             const isValid = nodeIds.has(edge.source) && nodeIds.has(edge.target);
