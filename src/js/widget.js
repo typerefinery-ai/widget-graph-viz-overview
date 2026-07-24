@@ -721,32 +721,28 @@ window.Widgets.Widget = {};
                     .style("top", (y + 10) + "px");
                 })
             .call(d3.drag()  //sets the event listener for the specified typenames and returns the drag behavior.
+                // Direct manipulation, no simulation restart. The graph is settled synchronously
+                // (the d3 timer is starved in the embedded iframe - docs/issues/0006/0016), so
+                // re-heating here flung the sparse layout apart, and alphaTarget(0.3) left the
+                // never-cooling simulation churning the starved timer until the iframe froze.
                 .on("start", function(event, d) {
-                    if (!event.active) {
-                        ns.simulation.alphaTarget(0.3).restart();//sets the current target alpha to the specified number in the range [0,1].
-                    }
-                    d.fy = d.y; //fx - the node's fixed x-position. Original is null.
-                    d.fx = d.x; //fy - the node's fixed y-position. Original is null.
+                    d.fx = d.x;
+                    d.fy = d.y;
                 }) //start - after a new pointer becomes active (on mousedown or touchstart).
                 .on("drag", function(event, d) {
-                    d.fx = event.x;
-                    d.fy = event.y;
+                    d.fx = d.x = event.x;
+                    d.fy = d.y = event.y;
+                    ns.renderPositions();
                 })      //drag - after an active pointer moves (on mousemove or touchmove).
                 .on("end", function(event, d) {
-                    if (!event.active) {
-                        ns.simulation.alphaTarget(0);
-                    }
-                    // Keep nodes fixed in position after dragging
-                    // They can be unfixed by double-clicking
-                    // fx and fy remain set, keeping the node in place
+                    // fx/fy remain set, keeping the node where the user put it
                     console.log("Node fixed at position:", d.id, d.fx, d.fy);
                 })     //end - after an active pointer becomes inactive (on mouseup, touchend or touchcancel).
             );
 
-        //Listen for tick events to render the nodes as they update in your Canvas or SVG.
-        ns.simulation
-            .nodes(data.nodes) //sets the simulation's nodes to the specified array of objects, initializing their positions and velocities, and then re-initializes any bound forces;
-            .on("tick", function() {
+        // Render current node/edge positions to the DOM. Shared by the simulation's tick
+        // handler and the drag behaviour (which moves nodes directly on a settled graph).
+        ns.renderPositions = function() {
                 link.attr("x1", d => d.source.x)
                     .attr("y1", d => d.source.y)
                     .attr("x2", d => d.target.x)
@@ -760,17 +756,22 @@ window.Widgets.Widget = {};
                     const dx = d.target.x - d.source.x;
                     const dy = d.target.y - d.source.y;
                     const angle = Math.atan2(dy, dx);
-                    
+
                     // Calculate intersection with target node shape
                     const intersection = ns.calculateShapeIntersection(angle, ns.config.iconSize, ns.config.shape);
-                    
+
                     // Calculate the end point of the edge (at the target node's edge)
                     const targetX = d.target.x - intersection.x;
                     const targetY = d.target.y - intersection.y;
-                    
+
                     return 'M ' + d.source.x + ' ' + d.source.y + ' L ' + targetX + ' ' + targetY;
                 });
-            })
+        };
+
+        //Listen for tick events to render the nodes as they update in your Canvas or SVG.
+        ns.simulation
+            .nodes(data.nodes) //sets the simulation's nodes to the specified array of objects, initializing their positions and velocities, and then re-initializes any bound forces;
+            .on("tick", ns.renderPositions)
 
         // Setup either the Layout, or Default Force Graph
         if (ns.config.showLayout) {
