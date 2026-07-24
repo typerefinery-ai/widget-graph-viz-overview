@@ -77,6 +77,146 @@ window.Widgets.Widget = {};
     // Track selected node
     ns.selectedNode = null;
 
+    // ------------------------------------------------------------------------------------
+    // Left-select -> open the object's Update form (os-threat#94)
+    //
+    // Ported from widget-graph-viz-composer, whose implementation is the working reference
+    // (alpha-launch docs/issues/0007 task 3). The overview's nodes carry the same shape -
+    // object_family / object_group / object_form / original - so the flow is identical:
+    // categorise the object into the four dicts the CMS form binds to, then raise the
+    // open-form event the page already listens for.
+    // ------------------------------------------------------------------------------------
+
+    // ⚠ DATA-MODEL DEVIATION - see alpha-launch docs/data-agnostic-principle.md
+    // These lists are STIX2 vocabulary. This is an os-triage-* application widget, so domain
+    // knowledge is permitted here, but the API should own the classification. They are a
+    // LAST-RESORT FALLBACK only - resolveFormCategories() prefers whatever the data or the
+    // host supplies, exactly as the composer does.
+    ns.FORM_CATEGORIES_FALLBACK_SOURCE = "widget built-in (STIX2 default)";
+    ns.FORM_BASE_REQUIRED = ["id", "type", "spec_version", "created", "modified"];
+    ns.FORM_BASE_OPTIONAL = [
+        "created_by_ref", "revoked", "labels", "confidence", "lang",
+        "external_references", "object_marking_refs", "granular_markings"
+    ];
+    ns.FORM_TIMESTAMP_EXCEPTIONS = ["created", "modified"];
+    ns.FORM_EXCEPTION_TYPES = ["process", "file", "network-traffic", "x-oca-asset", "x-oca-event"];
+
+    /**
+     * Resolve the property classification, preferring whoever owns the data model.
+     * 1. supplied with the object, 2. supplied by the host, 3. widget built-ins.
+     */
+    ns.resolveFormCategories = function(dataObject) {
+        const fromData = dataObject && dataObject.form_categories;
+        const fromHost = ns.config && ns.config.formCategories;
+        const supplied = fromData || fromHost;
+
+        if (supplied && supplied.base_required) {
+            return {
+                baseRequired: supplied.base_required || [],
+                baseOptional: supplied.base_optional || [],
+                timestampExceptions: supplied.timestamp_exceptions || [],
+                exceptionTypes: supplied.exception_types || [],
+                source: fromData ? "data payload" : "host options"
+            };
+        }
+        return {
+            baseRequired: ns.FORM_BASE_REQUIRED,
+            baseOptional: ns.FORM_BASE_OPTIONAL,
+            timestampExceptions: ns.FORM_TIMESTAMP_EXCEPTIONS,
+            exceptionTypes: ns.FORM_EXCEPTION_TYPES,
+            source: ns.FORM_CATEGORIES_FALLBACK_SOURCE
+        };
+    };
+
+    /** Split a flat object into the four dicts the CMS form binds to. */
+    ns.categoriseFormData = function(dataObject) {
+        const categorised = { base_required: {}, base_optional: {}, object: {}, extensions: {} };
+
+        if (!dataObject || typeof dataObject !== "object") {
+            console.warn("categoriseFormData: no object to categorise", dataObject);
+            return categorised;
+        }
+
+        const objectType = dataObject.type;
+        const categories = ns.resolveFormCategories(dataObject);
+        const isExceptionType = categories.exceptionTypes.indexOf(objectType) > -1;
+
+        Object.keys(dataObject).forEach(function(propertyName) {
+            const propertyValue = dataObject[propertyName];
+
+            if (propertyName === "form_categories") {
+                return; // control field, not a form property
+            }
+            if (isExceptionType && categories.timestampExceptions.indexOf(propertyName) > -1) {
+                categorised.object[propertyName] = propertyValue;
+            } else if (categories.baseRequired.indexOf(propertyName) > -1) {
+                categorised.base_required[propertyName] = propertyValue;
+            } else if (categories.baseOptional.indexOf(propertyName) > -1) {
+                categorised.base_optional[propertyName] = propertyValue;
+            } else if (propertyName === "extensions") {
+                categorised.extensions = propertyValue;
+            } else {
+                categorised.object[propertyName] = propertyValue;
+            }
+        });
+
+        console.log(
+            `categoriseFormData: type=${objectType} -> ` +
+            `base_required(${Object.keys(categorised.base_required).length}) ` +
+            `base_optional(${Object.keys(categorised.base_optional).length}) ` +
+            `object(${Object.keys(categorised.object).length}) ` +
+            `extensions(${Object.keys(categorised.extensions || {}).length})` +
+            (isExceptionType ? " [created/modified treated as object properties]" : "") +
+            ` [classification from: ${categories.source}]`
+        );
+
+        return categorised;
+    };
+
+    /** Raise the open-form event the host page already listens for. */
+    ns.openForm = function(formId, formData, options) {
+        console.group(`openForm on ${window.location}`);
+        const action = "BUTTON_CLICK";
+        const data = eventsNs.compileEventData(formData, formId, action, formId, options);
+        console.log(`event raise ${formId}`, data, options);
+        eventsNs.raiseEvent(formId, data);
+        console.groupEnd();
+    };
+
+    /**
+     * Open the Update form for a selected node.
+     *
+     * @param {object} node graph node, as delivered by the overview API
+     */
+    ns.openFormForNode = function(node) {
+        if (!node) {
+            return;
+        }
+        try {
+            const formId = "embed-viz-event-open-stixorm-forms-object";
+            const formData = ns.categoriseFormData(node.original);
+            const payloadOptions = {
+                "object_family": node.object_family,
+                "object_group": node.object_group,
+                "object_form": node.object_form,
+            };
+
+            if (!node.object_family || !node.object_group || !node.object_form) {
+                console.error(
+                    "openFormForNode: node is missing the form routing fields, the host cannot " +
+                    "resolve a form URL. Expected object_family/object_group/object_form, got:",
+                    payloadOptions, node
+                );
+                return;
+            }
+
+            console.log("open form for node", node.id, payloadOptions);
+            ns.openForm(formId, formData, payloadOptions);
+        } catch (error) {
+            console.error("openFormForNode: could not open the form for this node", error, node);
+        }
+    };
+
     // Track listeners for event callbacks
     ns.listeners = new Map();
 
@@ -531,6 +671,10 @@ window.Widgets.Widget = {};
                         .duration(200)
                         .attr("width", ns.config.iconSize * 1.2)
                         .attr("height", ns.config.iconSize * 1.2);
+
+                    // Requirement 3 / os-threat#94: left-select opens this object's Update form,
+                    // populated. Only on select - deselecting should not reopen it.
+                    ns.openFormForNode(ns.selectedNode);
                 }
                 console.log("Node selected:", ns.selectedNode);
             })
