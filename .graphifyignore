@@ -1,0 +1,34 @@
+# graphify excludes for widget-graph-viz-overview (webpack widget)
+
+# Dependencies and build output
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+target/
+**/target/
+
+# Lockfiles and generated metadata (huge, no graph value)
+package-lock.json
+
+# Scratch issue notes
+issue_*.txt
+
+# Test artifacts
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+coverage/
+
+# IDE / editor config
+.idea/
+.vscode/
+.cursor/
+.tasks/
+
+# Secrets
+.env
+.env.*
+
+# graphify's own output
+graphify-out/

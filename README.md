@@ -9,6 +9,20 @@
 
 Widget Graph Viz is a tree visualization widget supporting both local and widget (iframe) modes. It features robust test coverage, error handling, and a modern TDD workflow.
 
+## Codebase Lookup with graphify
+
+This repository is indexed as a [graphify](https://github.com/Graphify-Labs/graphify) knowledge graph (stored in `graphify-out/`). Use it to look things up in the codebase instead of searching blindly:
+
+```sh
+graphify query "how does X work?"
+```
+
+Rebuild the graph after significant changes:
+
+```sh
+graphify . --update
+```
+
 ## Development Workflow
 
 - Issue-first, TDD-driven
