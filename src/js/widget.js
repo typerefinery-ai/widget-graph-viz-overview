@@ -672,16 +672,115 @@ window.Widgets.Widget = {};
         }
 
           
-        // Restart the simulation if it was stopped (e.g., after clear)
-        if (ns.simulation.alpha() === 0) {
-            console.log("Restarting simulation after data load");
-            ns.simulation.alpha(1).restart();
-        } else {
-            // Ensure simulation is running
-            ns.simulation.restart();
-        }
-        
+        // Re-heat before settling. The previous test was `alpha() === 0`, which d3 never reports -
+        // alpha decays towards alphaMin (0.001) and the timer stops there - so after a clear/reload
+        // this fell through to a bare restart() on an already-cold simulation and nothing moved.
+        ns.simulation.alphaTarget(0).alpha(1);
+        ns.settle();
+
         console.groupEnd();
+    }
+
+    /** How many steps to run when settling the layout synchronously. */
+    ns.SETTLE_TICKS = 300;
+
+    /**
+     * Run the force simulation to a settled layout, synchronously.
+     *
+     * This widget used to hand the layout to d3's animation timer and hope. That works when the
+     * widget is open on its own, but NOT when it is embedded in a CMS page: measured there, the
+     * timer is starved, the layout never develops, and the graph renders as a single node in the
+     * corner while every node icon has been fetched - i.e. it looks like "no data" when the data
+     * is fine. See alpha-launch docs/issues/0006; the composer hit the same wall and solved it the
+     * same way (ForceGraph.settle, docs/issues/0004).
+     *
+     * These graphs are tens of nodes, so stepping them by hand costs a few milliseconds.
+     */
+    ns.settle = function () {
+        const sim = ns.simulation;
+        if (!sim || typeof sim.tick !== "function") {
+            console.warn("settle: no simulation to settle");
+            return;
+        }
+
+        const alphaBefore = sim.alpha();
+        try {
+            for (let i = 0; i < ns.SETTLE_TICKS; i++) {
+                sim.tick();
+            }
+
+            // simulation.tick() advances the layout but deliberately does NOT dispatch the "tick"
+            // event, so the SVG still shows pre-settle positions. Invoke the tick handler once to
+            // paint the result.
+            const onTick = sim.on("tick");
+            if (typeof onTick === "function") {
+                onTick.call(sim);
+            } else {
+                console.warn("settle: no tick handler registered, layout will not be painted");
+            }
+
+            // Stop it so the (unreliable) timer cannot re-heat and undo this.
+            sim.stop();
+
+            console.log(
+                `settle: ran ${ns.SETTLE_TICKS} ticks, alpha ${alphaBefore.toFixed(3)} -> ` +
+                `${sim.alpha().toFixed(4)}, ${sim.nodes().length} node(s) positioned`
+            );
+
+            ns.fitToPanel();
+        } catch (error) {
+            console.error("settle: failed to settle layout", error);
+        }
+    }
+
+    /**
+     * Scale and centre the settled layout so all of it is inside the panel.
+     *
+     * The force configuration produces a layout far larger than the panel - measured on the default
+     * incident, 28 nodes settle across y = -857..978 inside an 876px panel, so most of the graph sits
+     * above the top edge and the page looks empty. Rather than re-tune the forces (that is task 3 /
+     * os-threat#80, and owned elsewhere), fit the finished layout to the box.
+     *
+     * This is deliberately a *view* transform on the root <g>, not a change to node coordinates, so
+     * drag and the existing zoom handler keep working from wherever the graph ends up.
+     */
+    ns.fitToPanel = function () {
+        const sim = ns.simulation;
+        const root = ns.svg_g;
+        if (!sim || !root) {
+            console.warn("fitToPanel: no simulation or root group to fit");
+            return;
+        }
+
+        const nodes = sim.nodes().filter(n => Number.isFinite(n.x) && Number.isFinite(n.y));
+        if (!nodes.length) {
+            console.warn("fitToPanel: no positioned nodes to fit");
+            return;
+        }
+
+        const pad = ns.config.iconSize * 1.5;
+        const minX = Math.min(...nodes.map(n => n.x)) - pad;
+        const maxX = Math.max(...nodes.map(n => n.x)) + pad;
+        const minY = Math.min(...nodes.map(n => n.y)) - pad;
+        const maxY = Math.max(...nodes.map(n => n.y)) + pad;
+
+        const svgEl = root.node() && root.node().ownerSVGElement;
+        const box = svgEl && svgEl.getBoundingClientRect();
+        const panelW = box && box.width ? box.width : ns.config.width;
+        const panelH = box && box.height ? box.height : ns.config.height;
+
+        const scale = Math.min(panelW / (maxX - minX), panelH / (maxY - minY), 1);
+        const tx = (panelW - (maxX - minX) * scale) / 2 - minX * scale;
+        const ty = (panelH - (maxY - minY) * scale) / 2 - minY * scale;
+
+        const fitTransform = `translate(${tx},${ty}) scale(${scale})`;
+        root.attr("transform", fitTransform).attr("data-fit-transform", fitTransform);
+
+        console.log(
+            `fitToPanel: layout ${Math.round(maxX - minX)}x${Math.round(maxY - minY)} into ` +
+            `panel ${Math.round(panelW)}x${Math.round(panelH)} -> scale ${scale.toFixed(3)}, ` +
+            `translate(${Math.round(tx)},${Math.round(ty)})`
+        );
     }
 
 
@@ -711,6 +810,9 @@ window.Widgets.Widget = {};
             .attr("height", height)
             .append("g")
             .attr("transform", "translate(" + ns.config.margin.left + "," + ns.config.margin.top + ")");
+
+        // Keep a handle on the root group so fitToPanel() can re-centre the settled layout.
+        ns.svg_g = svg;
 
         //create tooltip - create new one if doesn't exist
         if (!window.Widgets.Widget.tooltip) {
@@ -754,12 +856,15 @@ window.Widgets.Widget = {};
 
         //create zoom handler - apply to parent SVG, transform the g element
         const parentSvg = d3.select(container).select("svg");
-        const initialTransform = `translate(${ns.config.margin.left},${ns.config.margin.top})`;
+        // Compose zoom on top of whatever transform the layout currently has - fitToPanel() may have
+        // replaced the initial margin translate with a fit transform, and zooming must not undo it.
+        const baseTransform = () => svg.attr("data-fit-transform")
+            || `translate(${ns.config.margin.left},${ns.config.margin.top})`;
         var zoom_handler = d3.zoom()
             .scaleExtent([0.1, 10])  // Allow zoom from 10% to 1000%
             .on("zoom", function(event){
                 // Combine zoom transform with initial margin translate
-                svg.attr("transform", `${initialTransform} ${event.transform}`);
+                svg.attr("transform", `${baseTransform()} ${event.transform}`);
             });
 
         // Apply zoom to the parent SVG element, not the g element
