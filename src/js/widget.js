@@ -339,6 +339,73 @@ window.Widgets.Widget = {};
      * Stops the simulation and clears simulation data
      * Keeps SVG structure (defs, arrowhead markers) intact
      */
+    /**
+     * The drawing area, in pixels.
+     *
+     * The container's own measurement is preferred, as the original code intended — but it cannot
+     * be trusted on its own. `$component.height()` was measured returning **0** on some loads (the
+     * `|| ns.config.height` fallback then quietly supplied 1000 and everything looked fine) and
+     * **150** on others, where 150 is truthy so the fallback never fired and the graph was scaled
+     * to 0.20 with 7px icons — legible in neither case (alpha-launch docs/issues/0056).
+     *
+     * The widget owns its whole iframe, so the viewport is the honest answer whenever the
+     * container reports something implausible. `ns.config` stays the last resort.
+     */
+    ns.panelSize = function($component) {
+        const measured = { w: $component.width(), h: $component.height() };
+        const view = {
+            w: (typeof window !== "undefined" && window.innerWidth) || 0,
+            h: (typeof window !== "undefined" && window.innerHeight) || 0,
+        };
+        // "Implausible" = less than half the viewport. A pane legitimately smaller than that would
+        // be too small to draw a force graph in anyway, so this cannot reject a usable measurement.
+        const usable = (m, v) => m > 0 && (!v || m >= v / 2);
+        const width = usable(measured.w, view.w) ? measured.w : (view.w || ns.config.width);
+        const height = usable(measured.h, view.h) ? measured.h : (view.h || ns.config.height);
+        if (width !== measured.w || height !== measured.h) {
+            console.warn(
+                "panelSize: container measured " + measured.w + "x" + measured.h +
+                " which does not fit viewport " + view.w + "x" + view.h +
+                "; drawing at " + width + "x" + height + " instead"
+            );
+        }
+        return { width: width, height: height };
+    };
+
+    /**
+     * Re-size the svg and re-fit when the container changes size.
+     *
+     * **Why this is the fix, and the earlier guess was not** (alpha-launch docs/issues/0056):
+     * the host lays this iframe out at its final size only after its own layout settles. Measured,
+     * the widget drew into a **1264x150** iframe and the container later became **853x720** — the
+     * svg kept the stale attributes, so `fitToPanel()` scaled a 27-node graph to **0.20** and the
+     * icons came out at 7px. Rejecting an "implausible" measurement cannot help: at the moment it
+     * is taken, the container, the body and the viewport all agree on the wrong size. Nothing is
+     * wrong with the measurement — it is simply taken too early, and never taken again.
+     *
+     * Idempotent: the observer is installed once per component.
+     */
+    ns.observeResize = function($component) {
+        const el = $component.get(0);
+        if (!el || typeof ResizeObserver === "undefined") return;
+        if ($component.data("resize-observed")) return;
+        $component.data("resize-observed", true);
+
+        let last = null;
+        const observer = new ResizeObserver(function() {
+            const panel = ns.panelSize($component);
+            const key = panel.width + "x" + panel.height;
+            if (key === last) return;
+            last = key;
+            const svgEl = d3.select(el).select("svg");
+            if (svgEl.empty()) return;
+            console.log("observeResize: container is now " + key + ", resizing svg and re-fitting");
+            svgEl.attr("width", panel.width).attr("height", panel.height);
+            if (ns.fitToPanel) ns.fitToPanel();
+        });
+        observer.observe(el);
+    };
+
     ns.clearData = function() {
         console.group(`widget clearData on ${window.location}`);
         
@@ -544,9 +611,10 @@ window.Widgets.Widget = {};
 
         let container = $component.get(0)
 
-        // Get container dimensions
-        const width = $component.width() || ns.config.width;
-        const height = $component.height() || ns.config.height;
+        // Get container dimensions — see ns.panelSize for why the raw measurement is not trusted.
+        const panel = ns.panelSize($component);
+        const width = panel.width;
+        const height = panel.height;
 
         // Dedupe nodes by id before anything binds to them. Upstream payloads can carry the
         // same STIX id twice (incident + its extension row - alpha-launch docs/issues/0024);
@@ -970,9 +1038,10 @@ window.Widgets.Widget = {};
         
         console.log($component);
 
-        // Get container dimensions
-        const width = $component.width() || ns.config.width;
-        const height = $component.height() || ns.config.height;
+        // Get container dimensions — see ns.panelSize for why the raw measurement is not trusted.
+        const panel = ns.panelSize($component);
+        const width = panel.width;
+        const height = panel.height;
 
         let container = $component.get(0)
 
@@ -986,6 +1055,9 @@ window.Widgets.Widget = {};
 
         // Keep a handle on the root group so fitToPanel() can re-centre the settled layout.
         ns.svg_g = svg;
+
+        // The host's iframe reaches its final size after this runs — re-fit when it does.
+        ns.observeResize($component);
 
         //create tooltip - create new one if doesn't exist
         if (!window.Widgets.Widget.tooltip) {
