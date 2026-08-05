@@ -299,6 +299,86 @@ window.Widgets.Widget = {};
     }
 
     /**
+     * Fetch the Overview options (GitHub #82) and merge them over the built-in defaults.
+     *
+     * The API has been live since 2026-08-04 and nothing consumed it — task 5 in the runsheet's
+     * rollup. The contract already lines up: 10 of its 15 keys (`width`, `height`, `showLayout`,
+     * `prefix`, `shape`, `margin`, `edgeFontFamily`, `edgeFontSize`, `notifications`, `theme`) have
+     * the same names as `ns.config`, so this is a merge rather than a mapping.
+     *
+     * ⚠️ **A 200 is not success here.** These flow algorithms answer 200 with an `{"error":"true"}`
+     * envelope when they throw (alpha-launch docs/issues/0026) — that is exactly how the overview
+     * half of #82 looked healthy while broken for a day. Reject that body rather than merging it
+     * over good defaults.
+     *
+     * Sets `ns.optionsReady` so a draw can wait for the merge instead of racing it.
+     */
+    ns.optionsUrl = '/viz-data/overview-options';
+
+    ns.mergeOptions = function(target, source) {
+        Object.keys(source || {}).forEach((key) => {
+            const value = source[key];
+            const isPlainObject = value && typeof value === "object" && !Array.isArray(value);
+            if (isPlainObject && target[key] && typeof target[key] === "object" && !Array.isArray(target[key])) {
+                ns.mergeOptions(target[key], value);
+            } else {
+                target[key] = value;
+            }
+        });
+        return target;
+    }
+
+    /**
+     * Where to reach the flow API from wherever this widget is running.
+     *
+     * ⚠️ `http://localhost:8111` only works in the **standalone** workbench. Embedded, the widget is
+     * served from `https://widgetdevoverview.typerefinery.localhost:8101`, and the direct port
+     * answers with **no `Access-Control-Allow-Origin`** — measured:
+     *
+     *     Access to fetch at 'http://localhost:8111/viz-data/overview-options' from origin
+     *     'https://widgetdevoverview.typerefinery.localhost:8101' has been blocked by CORS policy
+     *
+     * The Traefik host proxies the same route and does send `Access-Control-Allow-Origin: *`, which
+     * is the same conclusion alpha-launch decision 0006 reached for the incidents table's cold-start
+     * URL. Choose by the page's own scheme so the workbench keeps working on http.
+     *
+     * (`ns.loadDataFromAPI` below still hardcodes the direct port and would fail the same way if it
+     * were used embedded — it is not, because the host posts data in instead.)
+     */
+    ns.apiBase = function() {
+        return window.location.protocol === "https:"
+            ? "https://flow.typerefinery.localhost:8101"
+            : "http://localhost:8111";
+    }
+
+    ns.loadOptions = function() {
+        const url = ns.apiBase() + ns.optionsUrl;
+        console.log("loadOptions: fetching Overview options from " + url);
+        ns.optionsReady = fetch(url)
+            .then((response) => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then((options) => {
+                if (!options || typeof options !== "object" || options.error) {
+                    // docs/issues/0026: a 200 carrying an error body. Keep the defaults.
+                    console.warn("loadOptions: options endpoint returned an error body, keeping defaults", options);
+                    return false;
+                }
+                const applied = Object.keys(options);
+                ns.mergeOptions(ns.config, options);
+                console.log(`loadOptions: merged ${applied.length} option(s) over the defaults: ${applied.join(', ')}`);
+                return true;
+            })
+            .catch((error) => {
+                // Never let options break the widget — the defaults are a working configuration.
+                console.warn("loadOptions: could not load Overview options, keeping defaults: " + error.message);
+                return false;
+            });
+        return ns.optionsReady;
+    }
+
+    /**
      * Load data from local API endpoint
      */
     ns.loadDataFromAPI = function() {
@@ -598,6 +678,19 @@ window.Widgets.Widget = {};
     // }
 
     ns.loadFromData = function($component, data) {
+
+        // Draw with the fetched options, not before them. `init()` starts the options fetch and the
+        // host posts data separately, so without this the first draw can use the defaults and the
+        // merged theme/sizes only take effect on a later render — a race that would show up as
+        // "the options are applied, sometimes".
+        if (ns.optionsReady && !ns.optionsSettled) {
+            console.log("loadFromData: waiting for the options fetch before drawing");
+            ns.optionsReady.then(() => {
+                ns.optionsSettled = true;
+                ns.loadFromData($component, data);
+            });
+            return;
+        }
 
         console.group(`widget loadFromData on ${window.location}`);
 
@@ -1035,7 +1128,11 @@ window.Widgets.Widget = {};
             return;
         }
         $component.data("widget-initialized", true);
-        
+
+        // Start the #82 options fetch first, so the merge is in flight before any draw. loadFromData
+        // waits on ns.optionsReady rather than racing it.
+        ns.loadOptions().then(() => { ns.optionsSettled = true; });
+
         console.log($component);
 
         // Get container dimensions — see ns.panelSize for why the raw measurement is not trusted.
