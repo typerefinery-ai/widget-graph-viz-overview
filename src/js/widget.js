@@ -801,6 +801,28 @@ window.Widgets.Widget = {};
             .attr("dy", -2)  // Lift text 2 pixels above the edge line
             .text(d => d.name);
 
+        /**
+         * docs/issues/0107 — what a node should say under its icon.
+         *
+         * Every node in `/viz-data/overview-default-incident` has a `name` (0 of 28 missing), but
+         * "populated" is not "useful". Measured on the demo incident:
+         *   good  — "Potential Phishing Email", "Query Exchange Server", "evil@northkorea.nk",
+         *           "https://www.northkorea.nk/we/are/mad/"
+         *   weak  — "event", "task" (x5 sequence nodes: `name` is the REFERENT TYPE, not a name),
+         *           "99" (impact), "79563902" (user-account id)
+         *   bad   — "email-addr--eb38d07e-6ba8-56c1-b107-d4db4aacf212" (email-message: a raw STIX id)
+         *
+         * So label with `name`, but never render a raw STIX id — fall back to `heading`, the shaped
+         * type name, which is at least true. The weak-but-not-id cases are shown as they are rather
+         * than hidden: they are the shaper's output and hiding them would conceal docs/issues/0140.
+         */
+        ns.nodeLabel = function(d) {
+            const raw = (d && d.name != null) ? String(d.name).trim() : "";
+            const looksLikeStixId = /^[a-z0-9-]+--[0-9a-f-]{8,}$/i.test(raw);
+            const text = (!raw || looksLikeStixId) ? String((d && d.heading) || "") : raw;
+            return text.length > 28 ? text.slice(0, 27) + "…" : text;
+        };
+
         // Initialize the nodes
         // add hover over effect
         const node = svg.append("g")
@@ -929,6 +951,30 @@ window.Widgets.Widget = {};
                 })     //end - after an active pointer becomes inactive (on mouseup, touchend or touchcancel).
             );
 
+        // docs/issues/0107 — a text label under each node icon.
+        //
+        // Until now the graph showed 28 icons and no names at all, so a viewer could not tell WHICH
+        // identity, email address or task any node was without clicking it — and clicking is the
+        // least reliable interaction in the act (docs/issues/0084). The mockup
+        // (docs/mini-app-source/image5.png) labels every node, so this is the specified product.
+        //
+        // `pointer-events: none` is deliberate and load-bearing: docs/issues/0084 showed an
+        // opacity-hidden tooltip in this same widget acting as a hit shield. A label sitting under
+        // every node must never be able to swallow a click meant for the node.
+        const nodelabels = svg.append("g")
+            .attr("class", "node-labels")
+            .selectAll("text")
+            .data(data.nodes)
+            .join("text")
+            .attr("class", "node-label")
+            .attr("text-anchor", "middle")
+            .attr("font-size", 11)
+            .attr("font-family", ns.config.edgeFontFamily || "Arial, sans-serif")
+            .attr("fill", "#333")
+            .style("pointer-events", "none")
+            .style("user-select", "none")
+            .text(ns.nodeLabel);
+
         // Render current node/edge positions to the DOM. Shared by the simulation's tick
         // handler and the drag behaviour (which moves nodes directly on a settled graph).
         ns.renderPositions = function() {
@@ -939,6 +985,10 @@ window.Widgets.Widget = {};
 
                 node.attr("x", d => d.x - ns.config.iconSize/2)
                     .attr("y", d => d.y - ns.config.iconSize/2);
+
+                // Centred under the icon, clear of its bottom edge.
+                nodelabels.attr("x", d => d.x)
+                    .attr("y", d => d.y + ns.config.iconSize/2 + 12);
 
                 edgepaths.attr('d', d => {
                     // Calculate angle from source to target
