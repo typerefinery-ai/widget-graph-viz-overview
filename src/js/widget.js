@@ -839,6 +839,62 @@ window.Widgets.Widget = {};
             return text.length > 28 ? text.slice(0, 27) + "…" : text;
         };
 
+        /**
+         * docs/issues/0107 — keep labels the same size ON SCREEN whatever the view scale is.
+         *
+         * `fitToPanel()` scales the whole root group to fit the settled layout — measured at
+         * **0.39** for the 28-node demo incident. Text inside that group is scaled with it, so an
+         * 11px font rendered at **5px**: present in the DOM, and unreadable on screen. The first
+         * version of this feature shipped exactly that, because its probe asserted the labels
+         * existed, were non-empty and did not collide — never that they were legible.
+         *
+         * So font size and the vertical offset are expressed in GRAPH units as `wanted / scale`,
+         * which cancels the transform and lands them at `wanted` pixels on screen.
+         */
+        ns.LABEL_PX = 11;      // desired on-screen font size
+        ns.LABEL_GAP_PX = 6;   // desired on-screen gap between icon bottom and text top
+        ns.viewScale = 1;
+
+        ns.rescaleLabels = function(scale) {
+            const s = (typeof scale === "number" && isFinite(scale) && scale > 0) ? scale : 1;
+            ns.viewScale = s;
+            const svgRoot = ns.svg_g || d3.select("svg");
+            svgRoot.selectAll("text.node-label").attr("font-size", ns.LABEL_PX / s);
+            if (ns.renderPositions) ns.renderPositions();
+            if (ns.declutterLabels) ns.declutterLabels();
+            console.log(`rescaleLabels: view scale ${s.toFixed(3)} -> font ${(ns.LABEL_PX / s).toFixed(1)} graph units (${ns.LABEL_PX}px on screen)`);
+        };
+
+        /**
+         * docs/issues/0107 — hide any label that would overlap one already on screen.
+         *
+         * Making labels legible necessarily makes them wider: at 12px on screen, 28 labels on a
+         * graph fitted to 0.39 collided in 10 pairs with 16 of 28 involved. Shrinking them back is
+         * not a fix — it just returns to the unreadable 5px this replaced. So show as many
+         * non-overlapping labels as genuinely fit, and leave the rest to hover: the same bargain
+         * already struck for edge labels, and the reason the graph reads at all.
+         *
+         * Greedy, in DOM order. Run once per settle, never per tick — it reads layout, so putting it
+         * in renderPositions would force a reflow on every simulation step.
+         */
+        ns.declutterLabels = function() {
+            const svgRoot = ns.svg_g || d3.select("svg");
+            const labels = svgRoot.selectAll("text.node-label").nodes();
+            const kept = [];
+            let hidden = 0;
+            labels.forEach(function(el) {
+                el.style.opacity = 1;              // measure it at full size
+                const r = el.getBoundingClientRect();
+                if (!r.width) return;
+                const clash = kept.some(function(k) {
+                    return r.left < k.right && r.right > k.left && r.top < k.bottom && r.bottom > k.top;
+                });
+                if (clash) { el.style.opacity = 0; el.setAttribute("data-decluttered", "1"); hidden++; }
+                else { el.removeAttribute("data-decluttered"); kept.push(r); }
+            });
+            console.log(`declutterLabels: ${labels.length - hidden} shown, ${hidden} hidden (revealed on hover)`);
+        };
+
         // Initialize the nodes
         // add hover over effect
         const node = svg.append("g")
@@ -1002,9 +1058,16 @@ window.Widgets.Widget = {};
         };
         node.on("mouseover.edgelabels", function(event, d) {
                 edgelabels.style("opacity", e => edgeTouches(e, d.id) ? 1 : 0);
+                // docs/issues/0107 — a label hidden by declutterLabels() is still reachable: hovering
+                // its node brings it back, so no node is permanently anonymous.
+                nodelabels.filter(n => n.id === d.id).style("opacity", 1);
             })
-            .on("mouseout.edgelabels", function() {
+            .on("mouseout.edgelabels", function(event, d) {
                 edgelabels.style("opacity", 0);
+                nodelabels.filter(n => n.id === d.id)
+                    .style("opacity", function() {
+                        return this.getAttribute("data-decluttered") ? 0 : 1;
+                    });
             });
 
         // Render current node/edge positions to the DOM. Shared by the simulation's tick
@@ -1018,9 +1081,12 @@ window.Widgets.Widget = {};
                 node.attr("x", d => d.x - ns.config.iconSize/2)
                     .attr("y", d => d.y - ns.config.iconSize/2);
 
-                // Centred under the icon, clear of its bottom edge.
+                // Centred under the icon, clear of its bottom edge. The gap is expressed in graph
+                // units as `wanted / viewScale` so it stays constant on screen (docs/issues/0107) —
+                // at scale 0.39 a fixed 12-unit gap renders as ~5px and the text collides with the
+                // icon it belongs to.
                 nodelabels.attr("x", d => d.x)
-                    .attr("y", d => d.y + ns.config.iconSize/2 + 12);
+                    .attr("y", d => d.y + ns.config.iconSize/2 + (ns.LABEL_GAP_PX + ns.LABEL_PX) / (ns.viewScale || 1));
 
                 edgepaths.attr('d', d => {
                     // Calculate angle from source to target
@@ -1208,6 +1274,9 @@ window.Widgets.Widget = {};
         const fitTransform = `translate(${tx},${ty}) scale(${scale})`;
         root.attr("transform", fitTransform).attr("data-fit-transform", fitTransform);
 
+        // docs/issues/0107 — the fit scale is what shrinks the labels, so re-size them here.
+        if (ns.rescaleLabels) ns.rescaleLabels(scale);
+
         console.log(
             `fitToPanel: layout ${Math.round(maxX - minX)}x${Math.round(maxY - minY)} into ` +
             `panel ${Math.round(panelW)}x${Math.round(panelH)} -> scale ${scale.toFixed(3)}, ` +
@@ -1324,6 +1393,11 @@ window.Widgets.Widget = {};
             .on("zoom", function(event){
                 // Combine zoom transform with initial margin translate
                 svg.attr("transform", `${baseTransform()} ${event.transform}`);
+
+                // docs/issues/0107 — the effective scale is fit x zoom, so labels must be re-sized
+                // against the product, not against either alone, or they grow/shrink with zoom.
+                const fitScale = Number((/scale\(([\d.]+)\)/.exec(baseTransform()) || [])[1]) || 1;
+                if (ns.rescaleLabels) ns.rescaleLabels(fitScale * (event.transform.k || 1));
             });
 
         // Apply zoom to the parent SVG element, not the g element
