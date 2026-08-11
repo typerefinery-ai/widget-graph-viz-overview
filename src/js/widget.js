@@ -953,6 +953,22 @@ window.Widgets.Widget = {};
                     const targetX = d.target.x - intersection.x;
                     const targetY = d.target.y - intersection.y;
 
+                    // docs/issues/0107 — keep the label reading left-to-right.
+                    //
+                    // The label is a <textPath> bound to this path, and a textPath runs in the
+                    // path's OWN direction. Drawn source->target unconditionally, every edge whose
+                    // target sits left of its source renders its label mirrored and upside-down —
+                    // about a third of them (`email-address-ref`, `next-steps`, `sequenced-object`,
+                    // `provided-by-ref` were the reported ones). There is no rotation to correct;
+                    // the path direction IS the bug.
+                    //
+                    // Safe to reverse: this path is invisible (fill-opacity 0, stroke-opacity 0,
+                    // pointer-events none) and exists only to position the label — the edge the
+                    // user sees is the separate <line> updated above, which is untouched. So the
+                    // arrowhead and geometry are unaffected; only the text's reading order changes.
+                    if (targetX < d.source.x) {
+                        return 'M ' + targetX + ' ' + targetY + ' L ' + d.source.x + ' ' + d.source.y;
+                    }
                     return 'M ' + d.source.x + ' ' + d.source.y + ' L ' + targetX + ' ' + targetY;
                 });
         };
