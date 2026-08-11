@@ -789,7 +789,23 @@ window.Widgets.Widget = {};
             .attr('font-size', 12)
             .attr('font-family', 'Arial, sans-serif')
             .attr('font-weight', '500')
-            .attr('fill', '#666');
+            .attr('fill', '#666')
+            // docs/issues/0107 Option 3 — edge labels are revealed on hover, not drawn permanently.
+            //
+            // Measured with 28 nodes: 52 edge labels produced **62 edge-x-edge collisions**, with
+            // 46 of the 52 overlapping something — the "black smear" this issue describes around the
+            // hub. Adding node labels (Option 2) then added 36 node-x-edge collisions on top, taking
+            // 64 of 80 labels (80%) into at least one collision.
+            //
+            // The mockup (docs/mini-app-source/image5.png) shows the inverse of the build: every
+            // node named, and edges drawn as clean unlabelled curves. Hiding edge labels by default
+            // therefore matches the design AND is what makes the node names readable — 0107 Option 3
+            // is explicitly "make room for Option 2 rather than compete with it".
+            //
+            // Nothing is lost: hovering a node reveals the labels of the edges that touch it, which
+            // is also more useful than a permanent wall of text — the relationship you want named is
+            // the one attached to the node you are looking at.
+            .style('opacity', 0);
 
 
         edgelabels.append('textPath') //To render text along the shape of a <path>, enclose the text in a <textPath> element that has an href attribute with a reference to the <path> element.
@@ -974,6 +990,22 @@ window.Widgets.Widget = {};
             .style("pointer-events", "none")
             .style("user-select", "none")
             .text(ns.nodeLabel);
+
+        // docs/issues/0107 Option 3 — reveal an edge's label while its endpoint node is hovered.
+        //
+        // Namespaced so it composes with the existing `.tooltip` handlers on the same selection
+        // rather than replacing them (d3 would silently drop an unnamespaced duplicate).
+        const edgeTouches = (e, id) => {
+            const s = (e.source && e.source.id !== undefined) ? e.source.id : e.source;
+            const t = (e.target && e.target.id !== undefined) ? e.target.id : e.target;
+            return s === id || t === id;
+        };
+        node.on("mouseover.edgelabels", function(event, d) {
+                edgelabels.style("opacity", e => edgeTouches(e, d.id) ? 1 : 0);
+            })
+            .on("mouseout.edgelabels", function() {
+                edgelabels.style("opacity", 0);
+            });
 
         // Render current node/edge positions to the DOM. Shared by the simulation's tick
         // handler and the drag behaviour (which moves nodes directly on a settled graph).
