@@ -1165,6 +1165,25 @@ window.Widgets.Widget = {};
                 .style('display', 'block')
                 .style("position", "absolute")
                 .style("z-index", "10")
+                // docs/issues/0084 — remove this invisible overlay from hit-testing.
+                //
+                // Hidden on mouseout by `opacity: 0` ALONE, this div keeps `display: block`,
+                // `z-index: 10` and its last position, so it stays a live hit target. Measured on
+                // the embedded Overview: after one hover it is 409x634 px at (352,516), still
+                // `pointer-events: auto`, and it stays there indefinitely.
+                //
+                // ⚠️ It was proposed as the cause of 0084's click-delivery strand (a hand run got
+                // 0/4 node clicks to issue a form request; 0100 found P2-S5's "8/8 opened" were all
+                // the SAME form). That is NOT established, and the guard below was measured NOT to
+                // change it: with all 28 nodes checked for geometric overlap against the parked
+                // rect, ZERO node centres fell inside it either way. The tooltip anchors at
+                // (clientX, clientY + 10) and extends down-right, so it never covers the node you
+                // just hovered, and on this layout the rest cluster up-and-left of it.
+                //
+                // Kept because a 409x634 invisible decorative div should not be clickable under any
+                // layout — the exposure is real and node positions move every run — but it is
+                // hardening, not a demonstrated fix. 0084's click strand remains unexplained.
+                .style("pointer-events", "none")
                 .style("background-color", "white")
                 .style("border", "solid")
                 .style("border-width", "1px")
