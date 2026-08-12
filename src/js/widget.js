@@ -1159,13 +1159,31 @@ window.Widgets.Widget = {};
                 .force("charge", d3.forceManyBody().strength(-500)) // This adds repulsion (if it's negative) between nodes. 
                 // .force("center", d3.forceCenter(ns.config.width / 2, ns.config.height / 2)); // This force attracts nodes to the center of the svg area
         } else {
-            ns.simulation 
+            ns.simulation
                 .force("link")
                 .links(validEdges)
                 .id(d => d.id)
                 .distance(function() {return 4 * ns.config.iconSize;});
             ns.simulation
-                .force("charge", d3.forceManyBody().strength(-500)) // This adds repulsion (if it's negative) between nodes. 
+                .force("charge", d3.forceManyBody().strength(-500)) // This adds repulsion (if it's negative) between nodes.
+                // alpha-launch docs/issues/0155 — this branch is the one the Incident Overview uses,
+                // and it was the ONLY one without a collision force: `showLayout` above has had
+                // `forceCollide(iconSize)` all along, so two icons in the default graph could settle
+                // on top of each other. Measured on the curated 28-node incident: `overlaps 2`,
+                // deterministic across runs and independent of the data set.
+                //
+                // This restores the author's own stated intent rather than inventing a force - the
+                // commented-out original simulation in this file lists
+                // `.force("collision", d3.forceCollide().radius(ns.config.iconSize * 1.5))` as part
+                // of the default set. The radius here matches the live `showLayout` branch
+                // (`iconSize`) rather than that 1.5x, because charge is already repelling at -500
+                // and P2-S2 asserts the graph still FILLS the panel - the two constraints pull
+                // against each other, so this takes the smaller radius that clears the overlap.
+                //
+                // Icons are drawn iconSize square centred on the node, so a radius of iconSize
+                // keeps centres >= 2*iconSize apart - comfortably clear of the ~0.707*iconSize
+                // half-diagonal that would merely touch.
+                .force("collide", d3.forceCollide(ns.config.iconSize))
                 .force("center", d3.forceCenter(ns.config.width / 2, ns.config.height / 2)); // This force attracts nodes to the center of the svg area
         }
 
