@@ -231,9 +231,67 @@ window.Widgets.Widget = {};
     /**
      * Request data from parent application via postMessage
      */
+    /**
+     * Tell the viewer the graph is coming — alpha-launch docs/issues/0105.
+     *
+     * ⚠️ Act 2 is the FIRST graph an audience sees, and it showed **nothing at all** while loading.
+     * Measured (`e2e/probe-0105-blank-screen.mjs`): first node at 5.6 s, settled at 9.0 s, and **no
+     * indicator at any 250 ms sample** — so those seconds are indistinguishable from a broken page.
+     *
+     * 🔑 **This is a port, not a design.** The Composer already does exactly this — measured at
+     * 200 ms sampling it shows *"Loading graph data…"* then *"Graph data loaded successfully"* — and
+     * this widget already **bundles the identical `#notifications.js` helper**; it simply never
+     * called it. Same family, same library, same wording, so the two pages stop disagreeing about
+     * whether a loading state exists.
+     *
+     * Referenced through `window.Widgets.Notifications` rather than added to the IIFE signature:
+     * the helper attaches itself there, the Composer reaches for it the same way when dismissing,
+     * and a guarded lookup cannot break the graph if the helper is ever unbundled.
+     */
+    ns.notify = function(kind, message) {
+        try {
+            const n = window.Widgets && window.Widgets.Notifications;
+            if (!n) { console.log(`notify(${kind}): notifications helper absent — "${message}"`); return; }
+            /**
+             * ⚠️ One loading toast, not one per call. Measured after the first version of this change:
+             * `requestData()` runs more than once per page load, so the viewer briefly saw **two**
+             * stacked "Loading graph data…" toasts. Harmless mechanically, but it is the demo's
+             * opening screen and duplicated chrome reads as a glitch. Suppress a second one while the
+             * first is still up; the success/error path clears them together either way.
+             */
+            if (kind === 'loading') {
+                const already = [...document.querySelectorAll('.toastify')]
+                    .some((t) => t.textContent && /loading/i.test(t.textContent))
+                if (already) { console.log('notify(loading): one is already on screen, not stacking another'); return }
+            }
+            if (kind === 'loading' && n.showLoading) n.showLoading(message);
+            else if (kind === 'success' && n.showSuccess) n.showSuccess(message);
+            else if (kind === 'error' && n.showError) n.showError(message);
+            console.log(`notify(${kind}): ${message}`);
+        } catch (e) {
+            // A notification must never be able to stop the graph rendering.
+            console.warn('notify failed, continuing without it', e);
+        }
+    };
+
+    /**
+     * Clear the loading toasts specifically, leaving any other notification alone.
+     * ⚠️ `dismissAll()` would also wipe an error a user still needs to read.
+     */
+    ns.dismissLoading = function() {
+        try {
+            document.querySelectorAll('.toastify').forEach((t) => {
+                if (t.textContent && /loading/i.test(t.textContent)) t.remove();
+            });
+        } catch (e) { console.warn('dismissLoading failed', e); }
+    };
+
     ns.requestData = function() {
         console.group(`widget requestData on ${window.location}`);
-        
+
+        // docs/issues/0105 — say something immediately; the graph takes ~5.6 s to first node.
+        ns.notify('loading', 'Loading graph data...');
+
         const eventName = ns.eventName;
         const topics = [eventName];
         const eventAction = "load_data";
@@ -270,10 +328,17 @@ window.Widgets.Widget = {};
                 callbackFn: function(eventData) {
                     console.log("Data received from parent:", eventData);
                     const $currentComponent = $(ns.selectorComponent);
+                    // docs/issues/0105 — the loading toast must go once the answer arrives, whichever
+                    // way it went. Dismiss FIRST so an error message is not buried under it.
+                    ns.dismissLoading();
                     if (eventData && eventData.data) {
                         ns.loadFromData($currentComponent, eventData.data);
+                        ns.notify('success', 'Graph data loaded successfully');
                     } else if (eventData && eventData.error) {
                         console.error("Error loading data:", eventData.error);
+                        // ⚠️ Previously this failure was console-only: the viewer saw a blank pane and
+                        // no reason for it, which is the same complaint as the missing loading state.
+                        ns.notify('error', 'Could not load graph data');
                     }
                 }
             });
