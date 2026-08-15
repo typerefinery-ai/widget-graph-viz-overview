@@ -200,6 +200,14 @@ window.Widgets.Widget = {};
                 "object_group": node.object_group,
                 "object_form": node.object_form,
             };
+            // alpha-launch decision 0021 / issue 0133 — the flows now SERVE the resolved
+            // form path per node; pass it through so the host page can navigate from ONE
+            // served field instead of reassembling a URL from the trio (the shape behind
+            // the 0085/0102 404 classes). The trio stays alongside during the template
+            // transition; a node without the field simply omits it.
+            if (node.form_path) {
+                payloadOptions.form_path = node.form_path;
+            }
 
             if (!node.object_family || !node.object_group || !node.object_form) {
                 console.error(
