@@ -1317,8 +1317,81 @@ window.Widgets.Widget = {};
             );
 
             ns.fitToPanel();
+            ns.renderLegend();
         } catch (error) {
             console.error("settle: failed to settle layout", error);
+        }
+    }
+
+    /**
+     * Legend for the node type icons (alpha-launch docs/issues/0107 — the mockups name every
+     * node and the critique called out five icon styles with no key). Data-driven: one row per
+     * DISTINCT icon actually present in the rendered payload, labelled with the node type, so
+     * the legend never claims types the graph does not show and needs no domain list here.
+     *
+     * pointer-events: none on the whole overlay — a legend that can swallow a click becomes a
+     * hit shield over the graph, which is exactly 0084's failure mode in this widget.
+     */
+    ns.renderLegend = function () {
+        try {
+            const $component = $(ns.selectorComponent);
+            const el = $component.get(0);
+            const sim = ns.simulation;
+            if (!el || !sim) return;
+
+            const seen = {};
+            sim.nodes().forEach(function (d) {
+                if (d && d.icon && !seen[d.icon]) seen[d.icon] = d.type || d.icon;
+            });
+            const rows = Object.keys(seen).sort().map(function (icon) {
+                return { icon: icon, label: seen[icon] };
+            });
+
+            const existing = el.querySelector(".graph-legend");
+            if (existing) existing.remove();
+            if (!rows.length) return;
+
+            if (getComputedStyle(el).position === "static") {
+                el.style.position = "relative";
+            }
+            const legend = document.createElement("div");
+            legend.className = "graph-legend";
+            legend.setAttribute("aria-hidden", "true");
+            legend.style.cssText =
+                "position:absolute;top:8px;right:8px;z-index:5;pointer-events:none;" +
+                "background:rgba(255,255,255,0.85);border:1px solid rgba(0,0,0,0.12);" +
+                "border-radius:6px;padding:6px 10px;font:11px/1.7 sans-serif;color:#333;" +
+                "max-height:60%;overflow:hidden;";
+            // Two columns once the list is tall - the demo incident alone carries 18 distinct
+            // types, and a truncated legend misinforms exactly where it claims to inform.
+            const CAP = 24;
+            if (rows.length > 10) {
+                legend.style.columnCount = "2";
+                legend.style.columnGap = "14px";
+            }
+            rows.slice(0, CAP).forEach(function (row) {
+                const item = document.createElement("div");
+                item.style.cssText = "display:flex;align-items:center;gap:6px;white-space:nowrap;break-inside:avoid;";
+                const img = document.createElement("img");
+                img.src = ns.config.prefix + ns.config.shape + row.icon + ".svg";
+                img.alt = "";
+                img.style.cssText = "width:14px;height:14px;flex:none;";
+                const txt = document.createElement("span");
+                txt.textContent = row.label;
+                item.appendChild(img);
+                item.appendChild(txt);
+                legend.appendChild(item);
+            });
+            if (rows.length > CAP) {
+                const more = document.createElement("div");
+                more.textContent = "+" + (rows.length - CAP) + " more";
+                more.style.cssText = "opacity:0.6;";
+                legend.appendChild(more);
+            }
+            el.appendChild(legend);
+            console.log("renderLegend: " + rows.length + " distinct type icon(s)");
+        } catch (error) {
+            console.error("renderLegend failed (legend is optional, graph unaffected)", error);
         }
     }
 
