@@ -1566,6 +1566,35 @@ window.Widgets.Widget = {};
 
         // Apply zoom to the parent SVG element, not the g element
         zoom_handler(parentSvg);
+
+        // docs/issues/0118 defect 3 — zoom/pan had no way back short of a ~30 s reload. A reset
+        // control returns the view to the fitted state: clear the zoom transform through the
+        // handler (so d3's internal state resets too, not just the attribute) and re-fit.
+        ns.resetView = function () {
+            parentSvg.transition().duration(200).call(zoom_handler.transform, d3.zoomIdentity);
+            if (ns.fitToPanel) ns.fitToPanel();
+            console.log("resetView: zoom cleared, layout re-fitted");
+        };
+        ns.renderResetControl = function () {
+            const container_el = parentSvg.node() ? parentSvg.node().parentElement : null;
+            if (!container_el || container_el.querySelector(".graph-reset-view")) return;
+            if (getComputedStyle(container_el).position === "static") {
+                container_el.style.position = "relative";
+            }
+            const btn = document.createElement("button");
+            btn.className = "graph-reset-view";
+            btn.type = "button";
+            btn.title = "Reset view (fit graph to panel)";
+            btn.setAttribute("aria-label", "Reset view");
+            btn.textContent = "⤢ fit";
+            btn.style.cssText =
+                "position:absolute;bottom:8px;right:8px;z-index:5;padding:3px 10px;" +
+                "background:rgba(255,255,255,0.9);border:1px solid rgba(0,0,0,0.2);" +
+                "border-radius:5px;font:11px sans-serif;color:#333;cursor:pointer;";
+            btn.addEventListener("click", function () { ns.resetView(); });
+            container_el.appendChild(btn);
+        };
+        ns.renderResetControl();
         
         // Add click handler to SVG to deselect nodes when clicking on empty space
         parentSvg.on("click", function() {
