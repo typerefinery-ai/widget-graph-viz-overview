@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84.54 84.54">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: #58529e;
+      }
+
+      .cls-3 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        font-family: CopperplateGothic-Bold, 'Copperplate Gothic Bold';
+        font-size: 11px;
+        font-weight: 700;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g>
+      <rect class="cls-1" width="84.54" height="84.54" rx="9.96" ry="9.96"/>
+      <g>
+        <circle class="cls-3" cx="28.27" cy="21.82" r="4.68"/>
+        <circle class="cls-3" cx="24.8" cy="36.86" r="4.68"/>
+        <circle class="cls-3" cx="35.57" cy="45.57" r="4.68"/>
+        <circle class="cls-3" cx="51.09" cy="41.54" r="4.68"/>
+        <circle class="cls-3" cx="55.76" cy="27.51" r="4.68"/>
+        <circle class="cls-3" cx="46.41" cy="17.01" r="4.68"/>
+        <circle class="cls-3" cx="40.24" cy="31.29" r="4.68"/>
+        <rect class="cls-3" x="39.25" y="18.7" width="2" height="25.34" transform="translate(-10.04 39.99) rotate(-47.65)"/>
+        <path class="cls-3" d="M35.32,46.62l-11.63-8.44,3.73-17.17,19.33-5.12,10.11,11.34h0s.69.79.69.79l-.95.29-3.73,15.36-17.55,2.97ZM26.21,37.54l9.61,6.97,15.42-2.61,3.14-12.93-28.17,8.56ZM29.11,22.62l-2.78,12.78,27.6-8.39-6.33-6.81.17-.16-1.71-1.92-16.96,4.49Z"/>
+        <rect class="cls-3" x="28.08" y="30.76" width="25.72" height="2" transform="translate(-1.93 60.86) rotate(-71.97)"/>
+      </g>
+      <polygon class="cls-3" points="70.87 68.94 10.71 68.94 4.01 55.92 79.18 56.18 70.87 68.94"/>
+      <text class="cls-2" transform="translate(26.63 66.07)"><tspan x="0" y="0">IPv4</tspan></text>
+    </g>
+  </g>
+</svg>

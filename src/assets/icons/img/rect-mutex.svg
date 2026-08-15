@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84.54 84.54">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: #58529e;
+      }
+
+      .cls-2 {
+        font-family: MyriadConceptRoman-Cond, 'Myriad Variable Concept';
+        font-size: 36px;
+        font-variation-settings: 'wght' 400, 'wdth' 70;
+      }
+
+      .cls-3 {
+        fill: #fff;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g>
+      <rect class="cls-1" width="84.54" height="84.54" rx="9.96" ry="9.96"/>
+      <path class="cls-3" d="M41.92,63.29c-10.6,0-19.22-8.62-19.22-19.22v-15.24c0-10.6,8.62-19.22,19.22-19.22s19.22,8.62,19.22,19.22v15.24c0,10.6-8.62,19.22-19.22,19.22ZM41.92,16.61c-6.74,0-12.22,5.48-12.22,12.22v15.24c0,6.74,5.48,12.22,12.22,12.22s12.22-5.48,12.22-12.22v-15.24c0-6.74-5.48-12.22-12.22-12.22Z"/>
+      <path class="cls-3" d="M66.43,71.57c-16.4,5.09-32.8,5.09-49.19,0v-33.91c17.73-3.97,34.03-3.67,49.19,0v33.91Z"/>
+      <text class="cls-2" transform="translate(34.63 65.92)"><tspan x="0" y="0">1</tspan></text>
+    </g>
+  </g>
+</svg>

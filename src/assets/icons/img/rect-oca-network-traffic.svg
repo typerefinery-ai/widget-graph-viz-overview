@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84.54 84.54">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #1793d0;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        fill: none;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        stroke-width: 2px;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g>
+      <rect class="cls-1" width="84.54" height="84.54" rx="9.96" ry="9.96"/>
+      <polygon class="cls-2" points="38.55 28.89 37.87 35.12 33.83 35.6 37.48 36.42 44.94 36.42 48.49 35.71 44.73 35.36 44.22 28.42 38.55 28.89"/>
+      <rect class="cls-2" x="26.76" y="8.64" width="29.62" height="21.89"/>
+      <rect class="cls-1" x="29.88" y="11.19" width="23.61" height="16.42"/>
+      <polygon class="cls-2" points="59.4 58.14 58.72 64.37 54.68 64.84 58.33 65.67 65.79 65.67 69.34 64.96 65.58 64.61 65.07 57.66 59.4 58.14"/>
+      <rect class="cls-2" x="47.61" y="37.89" width="29.62" height="21.89"/>
+      <rect class="cls-1" x="50.74" y="40.44" width="23.61" height="16.42"/>
+      <polygon class="cls-2" points="17.7 58.14 17.02 64.37 12.98 64.84 16.63 65.67 24.09 65.67 27.64 64.96 23.88 64.61 23.37 57.66 17.7 58.14"/>
+      <rect class="cls-2" x="5.91" y="37.89" width="29.62" height="21.89"/>
+      <rect class="cls-1" x="9.03" y="40.44" width="23.61" height="16.42"/>
+      <circle class="cls-3" cx="41.95" cy="72.06" r="5.31"/>
+      <path class="cls-3" d="M47.26,72.06h13.78c1.47-.48,1.04-2.51,1.04-4.18"/>
+      <path class="cls-3" d="M36.05,72.06h-13.78c-1.47-.48-1.04-2.51-1.04-4.18"/>
+      <line class="cls-3" x1="41.62" y1="51.46" x2="41.62" y2="38.69"/>
+      <line class="cls-3" x1="41.62" y1="55.78" x2="41.62" y2="53.76"/>
+      <line class="cls-3" x1="41.62" y1="60.08" x2="41.62" y2="58.06"/>
+      <line class="cls-3" x1="41.62" y1="64.32" x2="41.62" y2="62.3"/>
+      <line class="cls-3" x1="41.62" y1="72.89" x2="41.62" y2="70.87"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84.54 84.54">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #58529e;
+      }
+
+      .cls-2, .cls-3 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        font-family: MyriadConceptRoman-BoldCond, 'Myriad Variable Concept';
+        font-size: 12px;
+        font-variation-settings: 'wght' 700, 'wdth' 70;
+        font-weight: 700;
+      }
+
+      .cls-4 {
+        fill: none;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        stroke-width: 2px;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g>
+      <rect class="cls-1" width="84.54" height="84.54" rx="9.96" ry="9.96"/>
+      <g>
+        <polygon class="cls-2" points="39.38 27.31 38.7 33.55 34.67 34.02 38.32 34.84 45.78 34.84 49.33 34.13 45.57 33.78 45.05 26.84 39.38 27.31"/>
+        <rect class="cls-2" x="27.6" y="7.06" width="29.62" height="21.89"/>
+        <rect class="cls-1" x="30.72" y="9.61" width="23.61" height="16.42"/>
+      </g>
+      <g>
+        <polygon class="cls-2" points="60.23 56.56 59.55 62.79 55.52 63.27 59.17 64.09 66.63 64.09 70.18 63.38 66.42 63.03 65.91 56.09 60.23 56.56"/>
+        <rect class="cls-2" x="48.45" y="36.31" width="29.62" height="21.89"/>
+        <rect class="cls-1" x="51.57" y="38.86" width="23.61" height="16.42"/>
+      </g>
+      <g>
+        <polygon class="cls-2" points="18.53 56.56 17.85 62.79 13.81 63.27 17.47 64.09 24.93 64.09 28.48 63.38 24.72 63.03 24.2 56.09 18.53 56.56"/>
+        <rect class="cls-2" x="6.75" y="36.31" width="29.62" height="21.89"/>
+        <rect class="cls-1" x="9.87" y="38.86" width="23.61" height="16.42"/>
+      </g>
+      <g>
+        <circle class="cls-4" cx="42.78" cy="70.48" r="5.31"/>
+        <path class="cls-4" d="M48.09,70.48h13.78c1.47-.48,1.04-2.51,1.04-4.18"/>
+        <path class="cls-4" d="M36.88,70.48h-13.78c-1.47-.48-1.04-2.51-1.04-4.18"/>
+        <line class="cls-4" x1="42.46" y1="49.89" x2="42.46" y2="37.11"/>
+        <line class="cls-4" x1="42.46" y1="54.2" x2="42.46" y2="52.18"/>
+        <line class="cls-4" x1="42.46" y1="58.5" x2="42.46" y2="56.48"/>
+        <line class="cls-4" x1="42.46" y1="62.74" x2="42.46" y2="60.72"/>
+        <line class="cls-4" x1="42.46" y1="71.31" x2="42.46" y2="69.29"/>
+      </g>
+      <text class="cls-3" transform="translate(32.2 22.04)"><tspan x="0" y="0">ICMP</tspan></text>
+      <text class="cls-3" transform="translate(53.48 50.67)"><tspan x="0" y="0">ICMP</tspan></text>
+      <text class="cls-3" transform="translate(11.25 50.67)"><tspan x="0" y="0">ICMP</tspan></text>
+    </g>
+  </g>
+</svg>

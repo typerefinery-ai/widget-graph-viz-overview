@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84.54 84.54">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #58529e;
+      }
+
+      .cls-2, .cls-3 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        font-family: MyriadConceptRoman-BoldCond, 'Myriad Variable Concept';
+        font-size: 12px;
+        font-variation-settings: 'wght' 700, 'wdth' 70;
+        font-weight: 700;
+      }
+
+      .cls-4 {
+        letter-spacing: .01em;
+      }
+
+      .cls-5 {
+        fill: none;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        stroke-width: 2px;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g>
+      <rect class="cls-1" width="84.54" height="84.54" rx="9.96" ry="9.96"/>
+      <g>
+        <polygon class="cls-2" points="39.61 26.84 38.93 33.07 34.89 33.54 38.55 34.37 46 34.37 49.56 33.66 45.8 33.31 45.28 26.36 39.61 26.84"/>
+        <rect class="cls-2" x="27.83" y="6.59" width="29.62" height="21.89"/>
+        <rect class="cls-1" x="30.95" y="9.14" width="23.61" height="16.42"/>
+      </g>
+      <g>
+        <polygon class="cls-2" points="60.46 56.09 59.78 62.32 55.74 62.79 59.4 63.62 66.86 63.62 70.41 62.91 66.65 62.56 66.13 55.61 60.46 56.09"/>
+        <rect class="cls-2" x="48.68" y="35.84" width="29.62" height="21.89"/>
+        <rect class="cls-1" x="51.8" y="38.39" width="23.61" height="16.42"/>
+      </g>
+      <g>
+        <polygon class="cls-2" points="18.76 56.09 18.08 62.32 14.04 62.79 17.69 63.62 25.15 63.62 28.71 62.91 24.95 62.56 24.43 55.61 18.76 56.09"/>
+        <rect class="cls-2" x="6.98" y="35.84" width="29.62" height="21.89"/>
+        <rect class="cls-1" x="10.1" y="38.39" width="23.61" height="16.42"/>
+      </g>
+      <g>
+        <circle class="cls-5" cx="43.01" cy="70.01" r="5.31"/>
+        <path class="cls-5" d="M48.32,70.01h13.78c1.47-.48,1.04-2.51,1.04-4.18"/>
+        <path class="cls-5" d="M37.11,70.01h-13.78c-1.47-.48-1.04-2.51-1.04-4.18"/>
+        <line class="cls-5" x1="42.69" y1="49.41" x2="42.69" y2="36.64"/>
+        <line class="cls-5" x1="42.69" y1="53.73" x2="42.69" y2="51.71"/>
+        <line class="cls-5" x1="42.69" y1="58.03" x2="42.69" y2="56.01"/>
+        <line class="cls-5" x1="42.69" y1="62.27" x2="42.69" y2="60.25"/>
+        <line class="cls-5" x1="42.69" y1="70.84" x2="42.69" y2="68.82"/>
+      </g>
+      <text class="cls-3" transform="translate(32.22 21.57)"><tspan x="0" y="0">H</tspan><tspan class="cls-4" x="6.18" y="0">T</tspan><tspan x="11.06" y="0">TP</tspan></text>
+      <text class="cls-3" transform="translate(53.5 50.2)"><tspan x="0" y="0">H</tspan><tspan class="cls-4" x="6.18" y="0">T</tspan><tspan x="11.06" y="0">TP</tspan></text>
+      <text class="cls-3" transform="translate(11.26 50.2)"><tspan x="0" y="0">H</tspan><tspan class="cls-4" x="6.18" y="0">T</tspan><tspan x="11.06" y="0">TP</tspan></text>
+    </g>
+  </g>
+</svg>
